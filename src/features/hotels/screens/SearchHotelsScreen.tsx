@@ -19,6 +19,8 @@ import {HotelStackParamList} from '../../../app/navigation/types';
 import {useTheme} from '../../../app/providers/ThemeProvider';
 import {hotelSearchParamsAtom} from '../state/hotelAtoms';
 import {formatDate} from '../../../core/utils/format';
+import SelectCityModal from '../components/SelectCityModal';
+import GuestSelectionModal from '../components/GuestSelectionModal';
 
 const illustrationImage = require('../../../assets/images/illustration/image.png');
 const hotelImg1 = require('../../../assets/images/hotels/252651206.jpg');
@@ -38,7 +40,9 @@ const SearchHotelsScreen: React.FC = () => {
   const navigation = useNavigation<SearchHotelsNavProp>();
   const {t} = useTranslation();
   const {colors, spacing, radius, typography} = useTheme();
-  const [params] = useAtom(hotelSearchParamsAtom);
+  const [params, setParams] = useAtom(hotelSearchParamsAtom);
+  const [isCityModalVisible, setIsCityModalVisible] = useState(false);
+  const [isGuestModalVisible, setIsGuestModalVisible] = useState(false);
 
   const handleSearch = () => {
     navigation.navigate('HotelResults');
@@ -283,7 +287,7 @@ const SearchHotelsScreen: React.FC = () => {
           {/* Location */}
           <TouchableOpacity 
             style={styles.fieldRow} 
-            onPress={() => navigation.navigate('WhereToGo')}
+            onPress={() => setIsCityModalVisible(true)}
           >
             <Icon name="search-outline" style={styles.fieldIcon} color={colors.textSecondary} />
             {params.location ? (
@@ -311,10 +315,15 @@ const SearchHotelsScreen: React.FC = () => {
           <View style={styles.divider} />
 
           {/* Guests */}
-          <TouchableOpacity style={styles.fieldRow}>
+          <TouchableOpacity 
+            style={styles.fieldRow}
+            onPress={() => setIsGuestModalVisible(true)}
+          >
             <Icon name="person-outline" style={styles.fieldIcon} color={colors.textSecondary} />
             <Text style={styles.valueText}>
-              {params.guests} {params.guests === 1 ? 'Adult' : 'Adults'} & 0 Children
+              {params.guests} {params.guests === 1 ? 'Adult' : 'Adults'}
+              {params.children > 0 ? `, ${params.children} Children` : ''}
+              {`, ${params.rooms} ${params.rooms === 1 ? 'Room' : 'Rooms'}`}
             </Text>
           </TouchableOpacity>
 
@@ -342,6 +351,33 @@ const SearchHotelsScreen: React.FC = () => {
           />
         </View>
       </ScrollView>
+
+      <SelectCityModal
+        isVisible={isCityModalVisible}
+        onClose={() => setIsCityModalVisible(false)}
+        onSelect={(cityName) => {
+          setParams(p => ({...p, location: cityName}));
+          setIsCityModalVisible(false);
+        }}
+        initialValue={params.location}
+      />
+
+      <GuestSelectionModal
+        isVisible={isGuestModalVisible}
+        onClose={() => setIsGuestModalVisible(false)}
+        onApply={(adults, children, rooms) => {
+          setParams(p => ({
+            ...p,
+            guests: adults,
+            children: children,
+            rooms: rooms,
+          }));
+          setIsGuestModalVisible(false);
+        }}
+        initialAdults={params.guests}
+        initialChildren={params.children}
+        initialRooms={params.rooms}
+      />
     </SafeAreaView>
   );
 };

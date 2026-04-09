@@ -2,7 +2,6 @@ import {NavigatorScreenParams} from '@react-navigation/native';
 
 export type HotelStackParamList = {
   SearchHotels: undefined;
-  WhereToGo: undefined;
   SelectDates: undefined;
   HotelResults: undefined;
   HotelDetail: {hotelId: string};

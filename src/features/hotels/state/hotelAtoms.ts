@@ -7,6 +7,8 @@ export const hotelSearchParamsAtom = atom<HotelSearchParams>({
   checkIn: null,
   checkOut: null,
   guests: 2,
+  children: 0,
+  rooms: 1,
 });
 
 export const hotelResultsAtom = atom<Hotel[]>([]);

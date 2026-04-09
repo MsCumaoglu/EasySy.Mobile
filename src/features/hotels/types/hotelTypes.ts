@@ -5,6 +5,8 @@ export interface HotelSearchParams {
   checkIn: string | null;
   checkOut: string | null;
   guests: number;
+  children: number;
+  rooms: number;
 }
 
 export interface HotelFilters {
