@@ -21,6 +21,7 @@ import {hotelSearchParamsAtom} from '../state/hotelAtoms';
 import {formatDate} from '../../../core/utils/format';
 import SelectCityModal from '../components/SelectCityModal';
 import GuestSelectionModal from '../components/GuestSelectionModal';
+import SelectDatesModal from '../components/SelectDatesModal';
 
 const illustrationImage = require('../../../assets/images/illustration/image.png');
 const hotelImg1 = require('../../../assets/images/hotels/252651206.jpg');
@@ -43,6 +44,7 @@ const SearchHotelsScreen: React.FC = () => {
   const [params, setParams] = useAtom(hotelSearchParamsAtom);
   const [isCityModalVisible, setIsCityModalVisible] = useState(false);
   const [isGuestModalVisible, setIsGuestModalVisible] = useState(false);
+  const [isDatesModalVisible, setIsDatesModalVisible] = useState(false);
 
   const handleSearch = () => {
     navigation.navigate('HotelResults');
@@ -301,7 +303,7 @@ const SearchHotelsScreen: React.FC = () => {
           {/* Dates */}
           <TouchableOpacity 
             style={styles.fieldRow}
-            onPress={() => navigation.navigate('SelectDates')}
+            onPress={() => setIsDatesModalVisible(true)}
           >
             <Icon name="calendar-outline" style={styles.fieldIcon} color={colors.textSecondary} />
             {params.checkIn && params.checkOut ? (
@@ -377,6 +379,17 @@ const SearchHotelsScreen: React.FC = () => {
         initialAdults={params.guests}
         initialChildren={params.children}
         initialRooms={params.rooms}
+      />
+
+      <SelectDatesModal
+        isVisible={isDatesModalVisible}
+        onClose={() => setIsDatesModalVisible(false)}
+        onConfirm={(start, end) => {
+          setParams(p => ({...p, checkIn: start, checkOut: end}));
+          setIsDatesModalVisible(false);
+        }}
+        initialStart={params.checkIn}
+        initialEnd={params.checkOut}
       />
     </SafeAreaView>
   );

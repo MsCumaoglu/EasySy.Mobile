@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 import {useTheme} from '../../../app/providers/ThemeProvider';
 import {Hotel} from '../models/Hotel';
-import {formatCurrency} from '../../../core/utils/format';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 interface HotelCardProps {
@@ -18,8 +17,22 @@ interface HotelCardProps {
   style?: ViewStyle;
 }
 
+const AMENITY_ICONS: Record<string, string> = {
+  pool: 'water-outline',
+  wifi: 'wifi-outline',
+  restaurant: 'restaurant-outline',
+  parking: 'car-outline',
+  spa: 'leaf-outline',
+  gym: 'barbell-outline',
+  ac: 'snow-outline',
+  breakfast: 'cafe-outline',
+};
+
 const HotelCard: React.FC<HotelCardProps> = ({hotel, onPress, style}) => {
   const {colors, spacing, radius, typography} = useTheme();
+  const [liked, setLiked] = useState(false);
+
+  const displayAmenities = hotel.amenities.slice(0, 4);
 
   const styles = StyleSheet.create({
     card: {
@@ -27,139 +40,204 @@ const HotelCard: React.FC<HotelCardProps> = ({hotel, onPress, style}) => {
       borderRadius: radius.xl,
       marginBottom: spacing.lg,
       shadowColor: colors.shadow,
-      shadowOffset: {width: 0, height: 3},
-      shadowOpacity: 0.08,
-      shadowRadius: 10,
-      elevation: 4,
+      shadowOffset: {width: 0, height: 2},
+      shadowOpacity: 0.06,
+      shadowRadius: 8,
+      elevation: 3,
       overflow: 'hidden',
-      borderWidth: 1,
-      borderColor: colors.border,
+    },
+    imageWrapper: {
+      width: '100%',
+      height: 200,
+      position: 'relative',
     },
     image: {
       width: '100%',
-      height: 190,
+      height: '100%',
       backgroundColor: colors.surface,
+    },
+    topOverlay: {
+      position: 'absolute',
+      top: spacing.md,
+      left: spacing.md,
+      right: spacing.md,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    iconCircle: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: colors.white,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: '#000',
+      shadowOffset: {width: 0, height: 1},
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    iconBtn: {
+      fontSize: 18,
+      color: colors.textSecondary,
+    },
+    iconBtnLiked: {
+      fontSize: 18,
+      color: '#E53E3E',
     },
     ratingBadge: {
       position: 'absolute',
-      top: spacing.md,
+      bottom: spacing.md,
       right: spacing.md,
-      backgroundColor: colors.primary,
-      borderRadius: radius.md,
-      paddingHorizontal: spacing.sm,
-      paddingVertical: 3,
+      backgroundColor: 'rgba(255,255,255,0.95)',
+      borderRadius: radius.full,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 5,
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 3,
+      gap: 4,
+      shadowColor: '#000',
+      shadowOffset: {width: 0, height: 1},
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
     },
     ratingText: {
       ...typography.caption,
-      color: colors.white,
+      color: colors.textPrimary,
       fontWeight: '700',
+      fontSize: 13,
     },
-    ratingIcon: {fontSize: 10, color: colors.white},
-    content: {padding: spacing.lg},
+    ratingStarIcon: {
+      fontSize: 13,
+      color: colors.textPrimary,
+    },
+    content: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+    },
+    nameRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: spacing.sm,
+    },
     name: {
       ...typography.subtitle,
       color: colors.textPrimary,
-      marginBottom: 4,
+      fontWeight: '700',
+      fontSize: 16,
+      flex: 1,
+      marginRight: spacing.sm,
+    },
+    pricePill: {
+      backgroundColor: colors.primary,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 5,
+    },
+    priceText: {
+      color: colors.white,
+      fontSize: 12,
+      fontWeight: '700',
     },
     locationRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: spacing.md,
+      justifyContent: 'space-between',
     },
-    locationIcon: {fontSize: 13, marginRight: 4, color: colors.textSecondary},
+    locationLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    locationIcon: {
+      fontSize: 14,
+      color: colors.primary,
+      marginRight: 4,
+    },
     locationText: {
       ...typography.caption,
       color: colors.textSecondary,
-    },
-    footer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    priceContainer: {},
-    priceLabel: {
-      ...typography.caption,
-      color: colors.textSecondary,
-    },
-    priceRange: {
-      ...typography.subtitle,
-      color: colors.primary,
-      fontWeight: '700',
+      fontSize: 13,
     },
     amenityRow: {
       flexDirection: 'row',
       gap: spacing.sm,
     },
-    amenityIcon: {
-      width: 28,
-      height: 28,
-      borderRadius: radius.sm,
+    amenityIconCircle: {
+      width: 30,
+      height: 30,
+      borderRadius: 15,
       backgroundColor: colors.surface,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    amenityEmoji: {fontSize: 14, color: colors.primary},
-    reviewCount: {
-      ...typography.caption,
-      color: colors.textSecondary,
-      marginBottom: 2,
+    amenityIcon: {
+      fontSize: 15,
+      color: colors.primary,
     },
   });
-
-  const AMENITY_ICONS: Record<string, string> = {
-    pool: 'water-outline',
-    wifi: 'wifi-outline',
-    restaurant: 'restaurant-outline',
-    parking: 'car-outline',
-    spa: 'leaf-outline',
-    gym: 'barbell-outline',
-    ac: 'snow-outline',
-    breakfast: 'cafe-outline',
-  };
-
-  const displayAmenities = hotel.amenities.slice(0, 4);
 
   return (
     <TouchableOpacity
       style={[styles.card, style]}
       onPress={onPress}
-      activeOpacity={0.85}>
-      <View>
+      activeOpacity={0.9}>
+      {/* Image + Overlays */}
+      <View style={styles.imageWrapper}>
         <Image
           source={{uri: hotel.images[0]}}
           style={styles.image}
           resizeMode="cover"
         />
+        {/* Top: heart + share */}
+        <View style={styles.topOverlay}>
+          <TouchableOpacity
+            style={styles.iconCircle}
+            onPress={() => setLiked(l => !l)}
+            activeOpacity={0.8}>
+            <Icon
+              name={liked ? 'heart' : 'heart-outline'}
+              style={liked ? styles.iconBtnLiked : styles.iconBtn}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconCircle} activeOpacity={0.8}>
+            <Icon name="share-social-outline" style={styles.iconBtn} />
+          </TouchableOpacity>
+        </View>
+        {/* Bottom-right: rating */}
         <View style={styles.ratingBadge}>
-          <Icon name="star" style={styles.ratingIcon} />
           <Text style={styles.ratingText}>{hotel.rating.toFixed(1)}</Text>
+          <Icon name="star" style={styles.ratingStarIcon} />
         </View>
       </View>
 
+      {/* Content */}
       <View style={styles.content}>
-        <Text style={styles.name}>{hotel.name}</Text>
-        <View style={styles.locationRow}>
-          <Icon name="location" style={styles.locationIcon} />
-          <Text style={styles.locationText}>{hotel.location}</Text>
+        {/* Name + Price */}
+        <View style={styles.nameRow}>
+          <Text style={styles.name}>{hotel.name}</Text>
+          <View style={styles.pricePill}>
+            <Text style={styles.priceText}>
+              {hotel.priceMin}$ - {hotel.priceMax}$
+            </Text>
+          </View>
         </View>
 
-        <View style={styles.footer}>
-          <View style={styles.priceContainer}>
-            <Text style={styles.reviewCount}>
-              {hotel.reviewCount} reviews
-            </Text>
-            <Text style={styles.priceRange}>
-              {formatCurrency(hotel.priceMin)} – {formatCurrency(hotel.priceMax)}
-            </Text>
-            <Text style={styles.priceLabel}>per night</Text>
+        {/* Location + Amenities */}
+        <View style={styles.locationRow}>
+          <View style={styles.locationLeft}>
+            <Icon name="location" style={styles.locationIcon} />
+            <Text style={styles.locationText}>{hotel.location}</Text>
           </View>
           <View style={styles.amenityRow}>
             {displayAmenities.map(a => (
-              <View key={a} style={styles.amenityIcon}>
-                <Icon name={AMENITY_ICONS[a] || 'checkmark-circle-outline'} style={styles.amenityEmoji} />
+              <View key={a} style={styles.amenityIconCircle}>
+                <Icon
+                  name={AMENITY_ICONS[a] || 'checkmark-circle-outline'}
+                  style={styles.amenityIcon}
+                />
               </View>
             ))}
           </View>
