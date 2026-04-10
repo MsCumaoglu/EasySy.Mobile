@@ -15,11 +15,13 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import dayjs from 'dayjs';
 import {HotelStackParamList} from '../../../app/navigation/types';
 import {useTheme} from '../../../app/providers/ThemeProvider';
+import {useRTL} from '../../../core/hooks/useRTL';
 import {hotelSearchParamsAtom, hotelResultsAtom, selectedHotelAtom} from '../state/hotelAtoms';
 import {hotelMockService} from '../services/hotelMockService';
 import {Hotel} from '../models/Hotel';
 import HotelCard from '../components/HotelCard';
 import Loader from '../../../shared/components/Loader';
+import { useTranslation } from 'react-i18next';
 
 type HotelResultsNavProp = NativeStackNavigationProp<
   HotelStackParamList,
@@ -33,6 +35,7 @@ const HotelResultsScreen: React.FC = () => {
   const [results, setResults] = useAtom(hotelResultsAtom);
   const [, setSelectedHotel] = useAtom(selectedHotelAtom);
   const [loading, setLoading] = useState(true);
+  const {t} = useTranslation();
 
   useEffect(() => {
     const load = async () => {
@@ -59,7 +62,7 @@ const HotelResultsScreen: React.FC = () => {
   const dateSubtitle =
     params.checkIn && params.checkOut
       ? `${formatShort(params.checkIn)} → ${formatShort(params.checkOut)}`
-      : 'Select dates';
+      : t('hotels.selectDates');
 
   const guestStr = `${params.guests}`;
 
@@ -197,7 +200,7 @@ const HotelResultsScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
         </View>
-        <Loader message="Searching hotels..." />
+        <Loader message={t('common.loading')} />
       </SafeAreaView>
     );
   }
@@ -233,15 +236,15 @@ const HotelResultsScreen: React.FC = () => {
       {/* Hotel count + Filter / Sort */}
       <View style={styles.controlsRow}>
         <Text style={styles.hotelCountText}>
-          Hotel List ({results.length})
+          {t('hotels.hotelList')} ({results.length})
         </Text>
         <View style={styles.controlsRight}>
           <TouchableOpacity style={styles.controlBtn} activeOpacity={0.75}>
-            <Text style={styles.controlBtnText}>Filter</Text>
+            <Text style={styles.controlBtnText}>{t('common.filter')}</Text>
             <Icon name="funnel-outline" style={styles.controlBtnIcon} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.controlBtn} activeOpacity={0.75}>
-            <Text style={styles.controlBtnText}>Sort</Text>
+            <Text style={styles.controlBtnText}>{t('common.sort')}</Text>
             <Icon name="swap-vertical-outline" style={styles.controlBtnIcon} />
           </TouchableOpacity>
         </View>
@@ -262,7 +265,7 @@ const HotelResultsScreen: React.FC = () => {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Icon name="business-outline" style={styles.emptyIcon} />
-            <Text style={styles.emptyText}>No hotels found</Text>
+            <Text style={styles.emptyText}>{t('hotels.noHotels')}</Text>
           </View>
         }
       />

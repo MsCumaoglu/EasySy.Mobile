@@ -7,6 +7,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import {useTheme} from '../../../app/providers/ThemeProvider';
+import {useTranslation} from 'react-i18next';
 import {BusTrip} from '../models/BusTrip';
 import {formatCurrency, formatDuration} from '../../../core/utils/format';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -25,6 +26,7 @@ const BUS_TYPE_BADGE: Record<string, {label: string; color: string}> = {
 
 const BusTripCard: React.FC<BusTripCardProps> = ({trip, onPress, style}) => {
   const {colors, spacing, radius, typography} = useTheme();
+  const {t} = useTranslation();
   const badge = BUS_TYPE_BADGE[trip.busType];
 
   const styles = StyleSheet.create({
@@ -163,7 +165,7 @@ const BusTripCard: React.FC<BusTripCardProps> = ({trip, onPress, style}) => {
             <Text style={styles.typeBadgeText}>{badge.label}</Text>
           </View>
         </View>
-        <Text style={styles.seatsText}>{trip.availableSeats} seats left</Text>
+        <Text style={styles.seatsText}>{trip.availableSeats} {t('bus.seats')}</Text>
       </View>
 
       {/* Time Row */}
@@ -198,10 +200,10 @@ const BusTripCard: React.FC<BusTripCardProps> = ({trip, onPress, style}) => {
       <View style={styles.footer}>
         <View>
           <Text style={styles.priceText}>{formatCurrency(trip.price)}</Text>
-          <Text style={styles.perPerson}>per person</Text>
+          <Text style={styles.perPerson}>{t('bus.perPerson')}</Text>
         </View>
         <TouchableOpacity style={styles.bookBtn} onPress={onPress}>
-          <Text style={styles.bookBtnText}>Book Now</Text>
+          <Text style={styles.bookBtnText}>{t('common.bookNow')}</Text>
         </TouchableOpacity>
       </View>
     </TouchableOpacity>

@@ -13,6 +13,7 @@ export type BusStackParamList = {
 
 export type RootStackParamList = {
   Home: undefined;
+  Settings: undefined;
   HotelStack: NavigatorScreenParams<HotelStackParamList>;
   BusStack: NavigatorScreenParams<BusStackParamList>;
 };

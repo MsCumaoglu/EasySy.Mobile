@@ -14,6 +14,7 @@ import {useTranslation} from 'react-i18next';
 import {useAtom, useAtomValue} from 'jotai';
 import {BusStackParamList} from '../../../app/navigation/types';
 import {useTheme} from '../../../app/providers/ThemeProvider';
+import {useRTL} from '../../../core/hooks/useRTL';
 import {busSearchParamsAtom, busResultsAtom} from '../state/busAtoms';
 import {busMockService} from '../services/busMockService';
 import BusTripCard from '../components/BusTripCard';
@@ -26,6 +27,7 @@ const BusResultsScreen: React.FC = () => {
   const navigation = useNavigation<BusResultsNavProp>();
   const {t} = useTranslation();
   const {colors, spacing, radius, typography} = useTheme();
+  const {isRTL} = useRTL();
   const params = useAtomValue(busSearchParamsAtom);
   const [results, setResults] = useAtom(busResultsAtom);
   const [loading, setLoading] = useState(true);
@@ -205,15 +207,15 @@ const BusResultsScreen: React.FC = () => {
       {/* ── Trip count + Filter / Sort ── */}
       <View style={styles.controlsRow}>
         <Text style={styles.tripCountText}>
-          Trip List ({results.length})
+          {t('bus.tripList')} ({results.length})
         </Text>
         <View style={styles.controlsRight}>
           <TouchableOpacity style={styles.controlBtn} activeOpacity={0.75}>
-            <Text style={styles.controlBtnText}>Filter</Text>
+            <Text style={styles.controlBtnText}>{t('common.filter')}</Text>
             <Icon name="funnel-outline" style={styles.controlBtnIcon} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.controlBtn} activeOpacity={0.75}>
-            <Text style={styles.controlBtnText}>Sort</Text>
+            <Text style={styles.controlBtnText}>{t('common.sort')}</Text>
             <Icon name="swap-vertical-outline" style={styles.controlBtnIcon} />
           </TouchableOpacity>
         </View>

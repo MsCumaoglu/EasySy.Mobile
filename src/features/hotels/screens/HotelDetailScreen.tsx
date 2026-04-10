@@ -23,6 +23,7 @@ import {hotelMockService} from '../services/hotelMockService';
 import {HotelReview} from '../models/Hotel';
 import {HotelTab} from '../types/hotelTypes';
 import {formatCurrency} from '../../../core/utils/format';
+import {useRTL} from '../../../core/hooks/useRTL';
 import PrimaryButton from '../../../shared/components/PrimaryButton';
 import Loader from '../../../shared/components/Loader';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -33,15 +34,15 @@ const THUMB_SIZE = (SCREEN_WIDTH - 40 - 5) / 3; // 16px side padding x2 + 2 gaps
 type HotelDetailNavProp = NativeStackNavigationProp<HotelStackParamList, 'HotelDetail'>;
 type HotelDetailRouteProp = RouteProp<HotelStackParamList, 'HotelDetail'>;
 
-const AMENITY_MAP: Record<string, {icon: string; label: string}> = {
-  pool: {icon: 'water-outline', label: 'Pool'},
-  wifi: {icon: 'wifi-outline', label: 'Free WiFi'},
-  restaurant: {icon: 'restaurant-outline', label: 'Restaurant'},
-  parking: {icon: 'car-outline', label: 'Parking'},
-  spa: {icon: 'leaf-outline', label: 'Spa'},
-  gym: {icon: 'barbell-outline', label: 'Gym'},
-  ac: {icon: 'snow-outline', label: 'AC'},
-  breakfast: {icon: 'cafe-outline', label: 'Breakfast'},
+const AMENITY_ICON_MAP: Record<string, string> = {
+  pool: 'water-outline',
+  wifi: 'wifi-outline',
+  restaurant: 'restaurant-outline',
+  parking: 'car-outline',
+  spa: 'leaf-outline',
+  gym: 'barbell-outline',
+  ac: 'snow-outline',
+  breakfast: 'cafe-outline',
 };
 
 const HotelDetailScreen: React.FC = () => {
@@ -49,6 +50,7 @@ const HotelDetailScreen: React.FC = () => {
   const route = useRoute<HotelDetailRouteProp>();
   const {t} = useTranslation();
   const {colors, spacing, radius, typography} = useTheme();
+  const {isRTL, flipIcon} = useRTL();
   const selectedHotel = useAtomValue(selectedHotelAtom);
   const [activeTab, setActiveTab] = useState<HotelTab>('detail');
   const [reviews, setReviews] = useState<HotelReview[]>([]);
@@ -417,8 +419,8 @@ const HotelDetailScreen: React.FC = () => {
             <View style={styles.amenitiesGrid}>
               {hotel.amenities.map(a => (
                 <View key={a} style={styles.amenityItem}>
-                  <Icon name={AMENITY_MAP[a]?.icon || 'checkmark-circle-outline'} style={styles.amenityEmoji} />
-                  <Text style={styles.amenityLabel}>{AMENITY_MAP[a]?.label}</Text>
+                  <Icon name={AMENITY_ICON_MAP[a] || 'checkmark-circle-outline'} style={styles.amenityEmoji} />
+                  <Text style={styles.amenityLabel}>{t(`hotels.${a}`)}</Text>
                 </View>
               ))}
             </View>
@@ -447,7 +449,7 @@ const HotelDetailScreen: React.FC = () => {
               {t('hotels.reviews')} ({reviews.length})
             </Text>
             {reviews.length === 0 && (
-              <Text style={styles.descriptionText}>No reviews yet.</Text>
+              <Text style={styles.descriptionText}>{t('hotels.noReviews')}</Text>
             )}
             {reviews.map(review => (
               <View key={review.id} style={styles.reviewCard}>
@@ -480,7 +482,7 @@ const HotelDetailScreen: React.FC = () => {
       {/* ── Header Bar ── */}
       <View style={styles.headerBar}>
         <TouchableOpacity style={styles.headerIconBtn} onPress={() => navigation.goBack()}>
-          <Icon name="chevron-back" style={styles.headerIcon} />
+          <Icon name={flipIcon('chevron-back')} style={styles.headerIcon} />
         </TouchableOpacity>
         <View style={styles.headerRightGroup}>
           <TouchableOpacity
@@ -641,7 +643,7 @@ const HotelDetailScreen: React.FC = () => {
       {/* Footer */}
       <View style={styles.footer}>
         <View style={styles.footerPrice}>
-          <Text style={styles.footerPriceLabel}>per night</Text>
+          <Text style={styles.footerPriceLabel}>{t('common.perNight')}</Text>
           <Text style={styles.footerPriceValue}>
             {formatCurrency(hotel.priceMin)}
           </Text>

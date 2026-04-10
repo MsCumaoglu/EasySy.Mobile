@@ -12,6 +12,7 @@ import {
 import dayjs from 'dayjs';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {useTheme} from '../../../app/providers/ThemeProvider';
+import {useTranslation} from 'react-i18next';
 import PrimaryButton from '../../../shared/components/PrimaryButton';
 
 const {height: SCREEN_HEIGHT} = Dimensions.get('window');
@@ -114,6 +115,7 @@ const SelectBusDateModal: React.FC<SelectBusDateModalProps> = ({
   isVisible, onClose, onConfirm, initialDate,
 }) => {
   const {colors, spacing, radius, typography} = useTheme();
+  const {t} = useTranslation();
   const today = dayjs();
   const [selected, setSelected] = useState<string | null>(initialDate ?? null);
 
@@ -169,7 +171,7 @@ const SelectBusDateModal: React.FC<SelectBusDateModalProps> = ({
 
               {/* Header */}
               <View style={styles.headerRow}>
-                <Text style={styles.title}>Select Date</Text>
+                <Text style={styles.title}>{t('common.selectDate')}</Text>
                 <TouchableOpacity onPress={onClose}>
                   <Icon name="close" style={styles.closeIcon} />
                 </TouchableOpacity>
@@ -179,7 +181,7 @@ const SelectBusDateModal: React.FC<SelectBusDateModalProps> = ({
               <View style={styles.selectedChip}>
                 <Icon name="calendar-outline" style={styles.chipIcon} />
                 <Text style={styles.chipText}>
-                  {selected ? dayjs(selected).format('ddd, D MMMM YYYY') : 'No date selected'}
+                  {selected ? dayjs(selected).format('ddd, D MMMM YYYY') : t('common.noDateSelected')}
                 </Text>
               </View>
 
@@ -205,7 +207,7 @@ const SelectBusDateModal: React.FC<SelectBusDateModalProps> = ({
               {/* Footer */}
               <View style={styles.footer}>
                 <PrimaryButton
-                  label="Confirm Date"
+                  label={t('common.confirmDate')}
                   onPress={() => selected && onConfirm(selected)}
                   disabled={!selected}
                 />

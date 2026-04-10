@@ -19,6 +19,7 @@ import {HotelStackParamList} from '../../../app/navigation/types';
 import {useTheme} from '../../../app/providers/ThemeProvider';
 import {hotelSearchParamsAtom} from '../state/hotelAtoms';
 import {formatDate} from '../../../core/utils/format';
+import {useRTL} from '../../../core/hooks/useRTL';
 import SelectCityModal from '../components/SelectCityModal';
 import GuestSelectionModal from '../components/GuestSelectionModal';
 import SelectDatesModal from '../components/SelectDatesModal';
@@ -42,6 +43,7 @@ const SearchHotelsScreen: React.FC = () => {
   const {t} = useTranslation();
   const {colors, spacing, radius, typography} = useTheme();
   const [params, setParams] = useAtom(hotelSearchParamsAtom);
+  const {isRTL, flipIcon} = useRTL();
   const [isCityModalVisible, setIsCityModalVisible] = useState(false);
   const [isGuestModalVisible, setIsGuestModalVisible] = useState(false);
   const [isDatesModalVisible, setIsDatesModalVisible] = useState(false);
@@ -272,7 +274,7 @@ const SearchHotelsScreen: React.FC = () => {
       
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" style={styles.backIcon} />
+          <Icon name={flipIcon('arrow-back')} style={styles.backIcon} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('hotels.searchTitle')}</Text>
       </View>
@@ -295,7 +297,7 @@ const SearchHotelsScreen: React.FC = () => {
             {params.location ? (
               <Text style={styles.valueText}>{params.location}</Text>
             ) : (
-              <Text style={styles.fieldText}>Select city or region</Text>
+              <Text style={styles.fieldText}>{t('hotels.selectCityOrRegion')}</Text>
             )}
           </TouchableOpacity>
           <View style={styles.divider} />
@@ -311,7 +313,7 @@ const SearchHotelsScreen: React.FC = () => {
                 {formatDate(params.checkIn, 'MMM DD')} - {formatDate(params.checkOut, 'MMM DD')}
               </Text>
             ) : (
-              <Text style={styles.fieldText}>Check-in - Check-out</Text>
+              <Text style={styles.fieldText}>{t('hotels.checkInCheckOut')}</Text>
             )}
           </TouchableOpacity>
           <View style={styles.divider} />
@@ -323,9 +325,9 @@ const SearchHotelsScreen: React.FC = () => {
           >
             <Icon name="person-outline" style={styles.fieldIcon} color={colors.textSecondary} />
             <Text style={styles.valueText}>
-              {params.guests} {params.guests === 1 ? 'Adult' : 'Adults'}
-              {params.children > 0 ? `, ${params.children} Children` : ''}
-              {`, ${params.rooms} ${params.rooms === 1 ? 'Room' : 'Rooms'}`}
+              {params.guests} {params.guests === 1 ? t('common.adult') : t('common.adults')}
+              {params.children > 0 ? `, ${params.children} ${params.children === 1 ? t('common.child') : t('common.children')}` : ''}
+              {`, ${params.rooms} ${params.rooms === 1 ? t('common.room') : t('common.rooms')}`}
             </Text>
           </TouchableOpacity>
 
@@ -342,7 +344,7 @@ const SearchHotelsScreen: React.FC = () => {
 
         {/* Popular Hotels Section */}
         <View style={styles.popularSection}>
-          <Text style={styles.popularTitle}>Popular Hotels</Text>
+          <Text style={styles.popularTitle}>{t('hotels.popularHotels')}</Text>
           <FlatList
             data={POPULAR_HOTELS}
             horizontal

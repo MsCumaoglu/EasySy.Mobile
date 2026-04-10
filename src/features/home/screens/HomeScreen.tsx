@@ -8,21 +8,22 @@ import {
   Image,
   TouchableOpacity,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useTranslation} from 'react-i18next';
 import {useAtom} from 'jotai';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {RootStackParamList} from '../../../app/navigation/types';
 import {useTheme} from '../../../app/providers/ThemeProvider';
 import {appThemeAtom} from '../../../state/appAtoms';
+import {useRTL} from '../../../core/hooks/useRTL';
 import HomeButtonCard from '../components/HomeButtonCard';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 const hotelImage = require('../../../assets/images/home/hotel.png');
-const busImage = require('../../../assets/images/home/bus.png');
+const busImage   = require('../../../assets/images/home/bus.png');
 const toursImage = require('../../../assets/images/home/history.png');
-const logoImage = require('../../../assets/images/home/logo.png');
+const logoImage  = require('../../../assets/images/home/logo.png');
 
 type HomeNavProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -31,16 +32,14 @@ const HomeScreen: React.FC = () => {
   const {t} = useTranslation();
   const {colors, spacing, radius, typography, isDark} = useTheme();
   const [theme, setTheme] = useAtom(appThemeAtom);
+  const {isRTL} = useRTL();
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
   const styles = StyleSheet.create({
-    safeArea: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
+    safeArea: {flex: 1, backgroundColor: colors.background},
     headerTopRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -50,25 +49,18 @@ const HomeScreen: React.FC = () => {
       marginBottom: spacing.xxl,
     },
     iconButton: {
-      width: 40,
-      height: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
+      width: 40, height: 40,
+      alignItems: 'center', justifyContent: 'center',
     },
-    iconText: {
-      fontSize: 24,
-      color: colors.textPrimary,
-    },
+    iconText: {fontSize: 24, color: colors.textPrimary},
     logoContainer: {
       alignItems: 'center',
       paddingHorizontal: spacing.xl,
       marginBottom: spacing.xxl,
     },
     logoImage: {
-      width: 200,
-      height: 80,
-      resizeMode: 'contain',
-      marginBottom: spacing.lg,
+      width: 200, height: 80,
+      resizeMode: 'contain', marginBottom: spacing.lg,
     },
     sloganContainer: {
       flexDirection: 'row',
@@ -77,15 +69,14 @@ const HomeScreen: React.FC = () => {
     sloganText: {
       ...typography.subtitle,
       color: colors.textPrimary,
-      fontWeight: '800',
-      fontSize: 18,
+      fontWeight: '800', fontSize: 18,
     },
     sloganHighlight: {
       ...typography.subtitle,
       color: colors.primary,
-      fontWeight: '800',
-      fontSize: 18,
-      marginLeft: 4,
+      fontWeight: '800', fontSize: 18,
+      marginLeft: isRTL ? 0 : 4,
+      marginRight: isRTL ? 4 : 0,
     },
     categoriesSection: {
       paddingHorizontal: spacing.xl,
@@ -97,24 +88,22 @@ const HomeScreen: React.FC = () => {
       justifyContent: 'space-between',
       marginBottom: spacing.lg,
     },
-    gridItem: {
-      flex: 1,
-    },
-    gridSpacer: {
-      width: spacing.lg,
-    },
+    gridItem: {flex: 1},
+    gridSpacer: {width: spacing.lg},
   });
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar
-        barStyle={colors.background === '#F5F5F5' ? 'dark-content' : 'light-content'}
+        barStyle={isDark ? 'light-content' : 'dark-content'}
         backgroundColor={colors.background}
       />
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header Top Row */}
         <View style={styles.headerTopRow}>
-          <TouchableOpacity style={styles.iconButton}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => navigation.navigate('Settings')}>
             <Icon name="settings-outline" style={styles.iconText} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconButton} onPress={toggleTheme}>
@@ -126,8 +115,8 @@ const HomeScreen: React.FC = () => {
         <View style={styles.logoContainer}>
           <Image source={logoImage} style={styles.logoImage} />
           <View style={styles.sloganContainer}>
-            <Text style={styles.sloganText}>Travel And Explore</Text>
-            <Text style={styles.sloganHighlight}>SYRIA</Text>
+            <Text style={styles.sloganText}>{t('home.slogan')}</Text>
+            <Text style={styles.sloganHighlight}>{t('home.sloganHighlight')}</Text>
           </View>
         </View>
 
@@ -138,7 +127,7 @@ const HomeScreen: React.FC = () => {
               variant="vertical"
               image={hotelImage}
               title={t('home.hotels')}
-              description="Boutique riads & modern stays"
+              description={t('home.hotelsDesc')}
               onPress={() => navigation.navigate('HotelStack', {screen: 'SearchHotels'})}
               style={styles.gridItem}
             />
@@ -147,7 +136,7 @@ const HomeScreen: React.FC = () => {
               variant="vertical"
               image={busImage}
               title={t('home.buses')}
-              description="Reliable inter-city Levant travel"
+              description={t('home.busesDesc')}
               onPress={() => navigation.navigate('BusStack', {screen: 'SearchBus'})}
               style={styles.gridItem}
             />
@@ -157,7 +146,7 @@ const HomeScreen: React.FC = () => {
             variant="horizontal"
             image={toursImage}
             title={t('home.tours')}
-            description="Curated itineraries for the modern nomadic soul."
+            description={t('home.toursDesc')}
             onPress={() => {}}
           />
         </View>

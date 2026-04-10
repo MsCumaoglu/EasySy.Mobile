@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {useTheme} from '../../../app/providers/ThemeProvider';
+import {useTranslation} from 'react-i18next';
 
 const {height: SCREEN_HEIGHT} = Dimensions.get('window');
 
@@ -48,6 +49,7 @@ const SelectBusCityModal: React.FC<SelectBusCityModalProps> = ({
   initialValue = '',
 }) => {
   const {colors, spacing, radius, typography} = useTheme();
+  const {t} = useTranslation();
   const [query, setQuery] = useState('');
 
   const filteredCities = useMemo(() => {
@@ -141,7 +143,7 @@ const SelectBusCityModal: React.FC<SelectBusCityModalProps> = ({
                   <Icon name="search-outline" style={styles.searchIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Search city..."
+                    placeholder={t('common.search')}
                     placeholderTextColor={colors.textSecondary}
                     value={query}
                     onChangeText={setQuery}
@@ -156,7 +158,7 @@ const SelectBusCityModal: React.FC<SelectBusCityModalProps> = ({
               </View>
 
               <Text style={styles.sectionTitle}>
-                {query ? 'Search Results' : 'Popular Cities'}
+                {query ? t('common.searchResults') : t('common.popularCities')}
               </Text>
 
               <FlatList
@@ -177,7 +179,7 @@ const SelectBusCityModal: React.FC<SelectBusCityModalProps> = ({
                     </View>
                     <View style={styles.cityInfo}>
                       {renderHighlight(item.name)}
-                      <Text style={styles.tripsText}>{item.trips} trips per day</Text>
+                      <Text style={styles.tripsText}>{item.trips} {t('bus.tripsPerDay')}</Text>
                     </View>
                     <Icon name="chevron-forward" style={{fontSize: 18, color: colors.textSecondary}} />
                   </TouchableOpacity>

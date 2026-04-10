@@ -18,6 +18,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import {BusStackParamList} from '../../../app/navigation/types';
 import {useTheme} from '../../../app/providers/ThemeProvider';
 import {busSearchParamsAtom} from '../state/busAtoms';
+import {useRTL} from '../../../core/hooks/useRTL';
 import SelectBusCityModal from '../components/SelectBusCityModal';
 import SelectBusDateModal from '../components/SelectBusDateModal';
 
@@ -40,6 +41,7 @@ const SearchBusScreen: React.FC = () => {
   const {colors, spacing, radius, typography} = useTheme();
   const [params, setParams] = useAtom(busSearchParamsAtom);
   const [loading, setLoading] = useState(false);
+  const {isRTL, flipIcon} = useRTL();
 
   // Modal visibility
   const [fromModalVisible,  setFromModalVisible]  = useState(false);
@@ -167,7 +169,7 @@ const SearchBusScreen: React.FC = () => {
       {/* ── Header ── */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" style={styles.backIcon} />
+          <Icon name={flipIcon('arrow-back')} style={styles.backIcon} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('bus.searchTitle')}</Text>
       </View>
@@ -228,7 +230,7 @@ const SearchBusScreen: React.FC = () => {
         <View style={styles.popularSection}>
           <View style={styles.popularHeader}>
             <Icon name="flame-outline" style={styles.popularHeaderIcon} />
-            <Text style={styles.popularTitle}>Popüler Şehirler</Text>
+            <Text style={styles.popularTitle}>{t('bus.popularCities')}</Text>
           </View>
           <View style={styles.chipsGrid}>
             {POPULAR_CITIES.map(city => (
@@ -260,7 +262,7 @@ const SearchBusScreen: React.FC = () => {
           setParams(p => ({...p, from: name}));
           setFromModalVisible(false);
         }}
-        title="From — Departure City"
+        title={t('bus.departureCity')}
         initialValue={params.from}
       />
 
@@ -271,7 +273,7 @@ const SearchBusScreen: React.FC = () => {
           setParams(p => ({...p, to: name}));
           setToModalVisible(false);
         }}
-        title="To — Destination City"
+        title={t('bus.destinationCity')}
         initialValue={params.to}
       />
 
