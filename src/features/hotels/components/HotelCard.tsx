@@ -52,8 +52,10 @@ const HotelCard: React.FC<HotelCardProps> = ({hotel, onPress, style}) => {
       position: 'relative',
     },
     image: {
-      width: '100%',
+      width: '97%',
       height: '100%',
+      margin:5,
+      borderRadius: radius.lg,
       backgroundColor: colors.surface,
     },
     topOverlay: {

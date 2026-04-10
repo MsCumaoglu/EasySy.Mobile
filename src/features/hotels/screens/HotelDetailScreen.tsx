@@ -1,15 +1,17 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   Image,
   StatusBar,
+  Dimensions,
+  Modal,
   FlatList,
 } from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useTranslation} from 'react-i18next';
@@ -24,6 +26,9 @@ import {formatCurrency} from '../../../core/utils/format';
 import PrimaryButton from '../../../shared/components/PrimaryButton';
 import Loader from '../../../shared/components/Loader';
 import Icon from 'react-native-vector-icons/Ionicons';
+
+const {width: SCREEN_WIDTH} = Dimensions.get('window');
+const THUMB_SIZE = (SCREEN_WIDTH - 40 - 5) / 3; // 16px side padding x2 + 2 gaps x4
 
 type HotelDetailNavProp = NativeStackNavigationProp<HotelStackParamList, 'HotelDetail'>;
 type HotelDetailRouteProp = RouteProp<HotelStackParamList, 'HotelDetail'>;
@@ -48,6 +53,15 @@ const HotelDetailScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<HotelTab>('detail');
   const [reviews, setReviews] = useState<HotelReview[]>([]);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [liked, setLiked] = useState(false);
+  const [lightboxVisible, setLightboxVisible] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const lightboxRef = useRef<FlatList>(null);
+
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
+    setLightboxVisible(true);
+  };
 
   const hotel = selectedHotel;
 
@@ -59,90 +73,191 @@ const HotelDetailScreen: React.FC = () => {
 
   const styles = StyleSheet.create({
     safeArea: {flex: 1, backgroundColor: colors.background},
-    imageContainer: {position: 'relative', height: 280},
-    heroImage: {width: '100%', height: 280, backgroundColor: colors.surface},
-    backBtnOverlay: {
-      position: 'absolute',
-      top: spacing.xl,
-      left: spacing.xl,
-      width: 40,
-      height: 40,
-      borderRadius: radius.full,
-      backgroundColor: 'rgba(0,0,0,0.4)',
+
+    /* ── Top Header Bar ── */
+    headerBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      backgroundColor: colors.background,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
+    },
+    headerIconBtn: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    backIcon: {fontSize: 22, color: 'white'},
-    imageDots: {
-      position: 'absolute',
-      bottom: spacing.md,
-      left: 0,
-      right: 0,
+    headerRightGroup: {
       flexDirection: 'row',
-      justifyContent: 'center',
-      gap: spacing.xs,
-    },
-    dot: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-      backgroundColor: 'rgba(255,255,255,0.5)',
-    },
-    activeDot: {
-      backgroundColor: colors.white,
-      width: 18,
-    },
-    thumbnailRow: {
-      flexDirection: 'row',
-      paddingHorizontal: spacing.xl,
-      paddingTop: spacing.md,
       gap: spacing.sm,
     },
-    thumbnail: {
-      width: 60,
-      height: 50,
-      borderRadius: radius.md,
-      borderWidth: 2,
-      borderColor: 'transparent',
+    headerIcon: {fontSize: 22, color: colors.textPrimary},
+    headerIconLiked: {fontSize: 22, color: '#E53E3E'},
+
+    /* ── Info Card ── */
+    infoCard: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
+      backgroundColor: colors.background,
     },
-    activeThumbnail: {
-      borderColor: colors.primary,
-    },
-    content: {paddingHorizontal: spacing.xl, paddingTop: spacing.lg},
-    nameRow: {
+    nameRatingRow: {
       flexDirection: 'row',
+      alignItems: 'center',
       justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      marginBottom: spacing.sm,
+      marginBottom: 6,
     },
-    hotelName: {
+    hotelNameTop: {
       ...typography.title,
       color: colors.textPrimary,
+      fontWeight: '700',
       flex: 1,
       marginRight: spacing.md,
     },
-    ratingBadge: {
-      backgroundColor: colors.primary,
-      borderRadius: radius.md,
-      paddingHorizontal: spacing.sm,
-      paddingVertical: 4,
+    ratingGroup: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 2,
+      gap: 4,
     },
-    ratingIcon: {fontSize: 12, color: colors.white},
-    ratingText: {
-      ...typography.body,
-      color: colors.white,
+    ratingValueText: {
+      ...typography.subtitle,
+      color: colors.textPrimary,
       fontWeight: '700',
     },
-    locationRow: {
+    ratingStarTop: {fontSize: 18, color: '#F5A623'},
+    locationPriceRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: spacing.xl,
+      justifyContent: 'space-between',
     },
-    locationIcon: {fontSize: 14, marginRight: 4, color: colors.textSecondary},
-    locationText: {...typography.body, color: colors.textSecondary},
+    locationLeftGroup: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    locationPinIcon: {fontSize: 16, color: colors.primary, marginRight: 4},
+    locationTopText: {
+      ...typography.body,
+      color: colors.textSecondary,
+      fontSize: 13,
+    },
+    priceBadge: {
+      backgroundColor: '#FF8C00',
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 5,
+    },
+    priceBadgeText: {
+      color: '#fff',
+      fontWeight: '700',
+      fontSize: 13,
+    },
+
+    /* ── Hero Image ── */
+    heroWrapper: {
+      marginHorizontal: spacing.lg,
+      marginTop: spacing.md,
+      borderTopRightRadius: radius.xl,
+      borderTopLeftRadius: radius.xl,
+      overflow: 'hidden',
+      height: 210,
+    },
+    heroImage: {
+      width: '100%',
+      height: '100%',
+      backgroundColor: colors.surface,
+    },
+
+    /* ── Thumbnail Grid ── */
+    thumbGrid: {
+      flexDirection: 'row',
+      marginHorizontal: spacing.lg,
+      marginTop: 5,
+      gap: 6,
+    },
+    thumbWrapper: {
+      width: THUMB_SIZE,
+      height: THUMB_SIZE * 0.75,
+      overflow: 'hidden',
+    },
+    thumbWrapperLast: {
+      width: THUMB_SIZE,
+      height: THUMB_SIZE * 0.75,
+      borderBottomRightRadius: radius.xl,
+      overflow: 'hidden',
+    },
+    thumbWrapperFirst: {
+      width: THUMB_SIZE,
+      height: THUMB_SIZE * 0.75,
+      borderBottomLeftRadius: radius.xl,
+      overflow: 'hidden',
+    },
+
+    thumbImage: {
+      width: '100%',
+      height: '100%',
+      backgroundColor: colors.surface,
+    },
+    thumbOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0,0,0,0.45)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    thumbOverlayText: {
+      color: '#fff',
+      fontWeight: '700',
+      fontSize: 18,
+    },
+    content: {paddingHorizontal: spacing.xl, paddingTop: spacing.lg},
+
+    /* ── Lightbox Modal ── */
+    lightboxModal: {
+      flex: 1,
+      backgroundColor: '#000',
+    },
+    lightboxImage: {
+      width: SCREEN_WIDTH,
+      height: '100%',
+    },
+    lightboxHeader: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingTop: 52,
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.md,
+      zIndex: 10,
+    },
+    lightboxCloseBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: 'rgba(0,0,0,0.55)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    lightboxCloseIcon: {fontSize: 24, color: '#fff'},
+    lightboxCounter: {
+      backgroundColor: 'rgba(0,0,0,0.55)',
+      borderRadius: 20,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 6,
+    },
+    lightboxCounterText: {
+      color: '#fff',
+      fontWeight: '700',
+      fontSize: 14,
+    },
     tabs: {
       flexDirection: 'row',
       backgroundColor: colors.surface,
@@ -354,70 +469,96 @@ const HotelDetailScreen: React.FC = () => {
     }
   };
 
+  /* ── Thumbnail helpers ── */
+  const thumbImages = hotel.images.slice(0, 3);
+  const extraCount = hotel.images.length - 3;
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+
+      {/* ── Header Bar ── */}
+      <View style={styles.headerBar}>
+        <TouchableOpacity style={styles.headerIconBtn} onPress={() => navigation.goBack()}>
+          <Icon name="chevron-back" style={styles.headerIcon} />
+        </TouchableOpacity>
+        <View style={styles.headerRightGroup}>
+          <TouchableOpacity
+            style={styles.headerIconBtn}
+            onPress={() => setLiked(l => !l)}>
+            <Icon
+              name={liked ? 'heart' : 'heart-outline'}
+              style={liked ? styles.headerIconLiked : styles.headerIcon}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerIconBtn}>
+            <Icon name="share-social-outline" style={styles.headerIcon} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Hero Image Gallery */}
-        <View style={styles.imageContainer}>
+        {/* ── Hotel Name + Rating ── */}
+        <View style={styles.infoCard}>
+          <View style={styles.nameRatingRow}>
+            <Text style={styles.hotelNameTop} numberOfLines={1}>{hotel.name}</Text>
+            <View style={styles.ratingGroup}>
+              <Text style={styles.ratingValueText}>{hotel.rating.toFixed(1)}</Text>
+              <Icon name="star" style={styles.ratingStarTop} />
+            </View>
+          </View>
+          <View style={styles.locationPriceRow}>
+            <View style={styles.locationLeftGroup}>
+              <Icon name="location" style={styles.locationPinIcon} />
+              <Text style={styles.locationTopText}>{hotel.location}</Text>
+            </View>
+            <View style={styles.priceBadge}>
+              <Text style={styles.priceBadgeText}>
+                {hotel.priceMin}$ - {hotel.priceMax}$
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* ── Hero Image ── */}
+        <TouchableOpacity
+          style={styles.heroWrapper}
+          activeOpacity={0.92}
+          onPress={() => openLightbox(activeImageIndex)}>
           <Image
             source={{uri: hotel.images[activeImageIndex]}}
             style={styles.heroImage}
             resizeMode="cover"
           />
-          <TouchableOpacity
-            style={styles.backBtnOverlay}
-            onPress={() => navigation.goBack()}>
-            <Icon name="arrow-back" style={styles.backIcon} />
-          </TouchableOpacity>
-          {hotel.images.length > 1 && (
-            <View style={styles.imageDots}>
-              {hotel.images.map((_, i) => (
-                <View
-                  key={i}
-                  style={[styles.dot, i === activeImageIndex && styles.activeDot]}
-                />
-              ))}
-            </View>
-          )}
-        </View>
+        </TouchableOpacity>
 
-        {/* Thumbnails */}
+        {/* ── Thumbnail Grid (3 columns) ── */}
         {hotel.images.length > 1 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.thumbnailRow}>
-            {hotel.images.map((img, i) => (
-              <TouchableOpacity key={i} onPress={() => setActiveImageIndex(i)}>
-                <Image
-                  source={{uri: img}}
-                  style={[
-                    styles.thumbnail,
-                    i === activeImageIndex && styles.activeThumbnail,
-                  ]}
-                  resizeMode="cover"
-                />
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          <View style={styles.thumbGrid}>
+            {thumbImages.map((img, i) => {
+              const isLast = i === 2 && extraCount > 0;
+              return (
+                <TouchableOpacity
+                  key={i}
+                  style={i === 0 ? styles.thumbWrapperFirst : i === 2 ? styles.thumbWrapperLast : styles.thumbWrapper}
+                  activeOpacity={0.85}
+                  onPress={() => {
+                    setActiveImageIndex(i);
+                    openLightbox(i);
+                  }}>
+                  <Image source={{uri: img}} style={styles.thumbImage} resizeMode="cover" />
+                  {isLast && (
+                    <View style={styles.thumbOverlay}>
+                      <Text style={styles.thumbOverlayText}>+{extraCount}</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         )}
 
         <View style={styles.content}>
-          {/* Hotel Name + Rating */}
-          <View style={styles.nameRow}>
-            <Text style={styles.hotelName}>{hotel.name}</Text>
-            <View style={styles.ratingBadge}>
-              <Icon name="star" style={styles.ratingIcon} />
-              <Text style={styles.ratingText}>{hotel.rating.toFixed(1)}</Text>
-            </View>
-          </View>
-
-          <View style={styles.locationRow}>
-            <Icon name="location" style={styles.locationIcon} />
-            <Text style={styles.locationText}>{hotel.location}</Text>
-          </View>
-
           {/* Tabs */}
           <View style={styles.tabs}>
             {TABS.map(tab => (
@@ -440,6 +581,62 @@ const HotelDetailScreen: React.FC = () => {
           {renderTabContent()}
         </View>
       </ScrollView>
+
+      {/* ── Lightbox Modal ── */}
+      <Modal
+        visible={lightboxVisible}
+        transparent={false}
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setLightboxVisible(false)}>
+        <StatusBar barStyle="light-content" backgroundColor="#000" />
+        <View style={styles.lightboxModal}>
+          {/* Header */}
+          <View style={styles.lightboxHeader}>
+            <TouchableOpacity
+              style={styles.lightboxCloseBtn}
+              onPress={() => setLightboxVisible(false)}>
+              <Icon name="close" style={styles.lightboxCloseIcon} />
+            </TouchableOpacity>
+            <View style={styles.lightboxCounter}>
+              <Text style={styles.lightboxCounterText}>
+                {lightboxIndex + 1} / {hotel.images.length}
+              </Text>
+            </View>
+          </View>
+
+          {/* Swipeable images */}
+          <FlatList
+            ref={lightboxRef}
+            data={hotel.images}
+            keyExtractor={(_, i) => String(i)}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            initialScrollIndex={lightboxIndex}
+            getItemLayout={(_, index) => ({
+              length: SCREEN_WIDTH,
+              offset: SCREEN_WIDTH * index,
+              index,
+            })}
+            onMomentumScrollEnd={e => {
+              const idx = Math.round(
+                e.nativeEvent.contentOffset.x / SCREEN_WIDTH,
+              );
+              setLightboxIndex(idx);
+            }}
+            renderItem={({item}) => (
+              <View style={{width: SCREEN_WIDTH, height: '100%', justifyContent: 'center'}}>
+                <Image
+                  source={{uri: item}}
+                  style={styles.lightboxImage}
+                  resizeMode="contain"
+                />
+              </View>
+            )}
+          />
+        </View>
+      </Modal>
 
       {/* Footer */}
       <View style={styles.footer}>

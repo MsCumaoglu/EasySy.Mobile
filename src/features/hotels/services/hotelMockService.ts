@@ -17,6 +17,8 @@ const MOCK_HOTELS: Hotel[] = [
       'https://picsum.photos/seed/palmyra1/800/500',
       'https://picsum.photos/seed/palmyra2/800/500',
       'https://picsum.photos/seed/palmyra3/800/500',
+      'https://picsum.photos/seed/palmyra3/800/500',
+      'https://picsum.photos/seed/lattakia2/800/500',
     ],
     amenities: ['pool', 'wifi', 'restaurant', 'spa', 'gym', 'breakfast', 'ac'],
     description:
@@ -80,6 +82,10 @@ const MOCK_HOTELS: Hotel[] = [
     images: [
       'https://picsum.photos/seed/damascus1/800/500',
       'https://picsum.photos/seed/damascus2/800/500',
+      'https://picsum.photos/seed/damascus2/800/500',
+      'https://picsum.photos/seed/damascus2/800/500',  
+      'https://picsum.photos/seed/damascus2/800/500',
+
     ],
     amenities: ['wifi', 'restaurant', 'gym', 'spa', 'parking', 'ac', 'breakfast'],
     description:

@@ -3,12 +3,12 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   StatusBar,
   Image,
   TouchableOpacity,
 } from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useTranslation} from 'react-i18next';
@@ -109,8 +109,7 @@ const HomeScreen: React.FC = () => {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar
         barStyle={colors.background === '#F5F5F5' ? 'dark-content' : 'light-content'}
-        backgroundColor="transparent"
-        translucent={true}
+        backgroundColor={colors.background}
       />
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header Top Row */}
