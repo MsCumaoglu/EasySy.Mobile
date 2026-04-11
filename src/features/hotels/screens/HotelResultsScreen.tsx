@@ -30,7 +30,7 @@ type HotelResultsNavProp = NativeStackNavigationProp<
 
 const HotelResultsScreen: React.FC = () => {
   const navigation = useNavigation<HotelResultsNavProp>();
-  const {colors, spacing, radius, typography} = useTheme();
+  const {colors, spacing, radius, typography, isDark} = useTheme();
   const params = useAtomValue(hotelSearchParamsAtom);
   const [results, setResults] = useAtom(hotelResultsAtom);
   const [, setSelectedHotel] = useAtom(selectedHotelAtom);
@@ -67,7 +67,7 @@ const HotelResultsScreen: React.FC = () => {
   const guestStr = `${params.guests}`;
 
   const styles = StyleSheet.create({
-    safeArea: {flex: 1, backgroundColor: '#F5F5F7'},
+    safeArea: {flex: 1, backgroundColor: colors.background},
     header: {
       backgroundColor: colors.card,
       paddingHorizontal: spacing.xl,
@@ -131,6 +131,7 @@ const HotelResultsScreen: React.FC = () => {
       paddingHorizontal: spacing.xl,
       paddingTop: spacing.lg,
       paddingBottom: spacing.md,
+      backgroundColor: colors.background,
     },
     hotelCountText: {
       ...typography.subtitle,
@@ -167,6 +168,7 @@ const HotelResultsScreen: React.FC = () => {
       paddingHorizontal: spacing.xl,
       paddingTop: spacing.sm,
       paddingBottom: spacing.xxl,
+      backgroundColor: colors.background,
     },
     emptyContainer: {
       flex: 1,
@@ -208,7 +210,7 @@ const HotelResultsScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar
-        barStyle={colors.background === '#FAFAFA' ? 'dark-content' : 'light-content'}
+        barStyle={isDark ? 'light-content' : 'dark-content'}
         backgroundColor={colors.card}
       />
 

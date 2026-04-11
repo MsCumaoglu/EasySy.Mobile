@@ -41,7 +41,7 @@ const POPULAR_HOTELS = [
 const SearchHotelsScreen: React.FC = () => {
   const navigation = useNavigation<SearchHotelsNavProp>();
   const {t} = useTranslation();
-  const {colors, spacing, radius, typography} = useTheme();
+  const {colors, spacing, radius, typography, isDark} = useTheme();
   const [params, setParams] = useAtom(hotelSearchParamsAtom);
   const {isRTL, flipIcon} = useRTL();
   const [isCityModalVisible, setIsCityModalVisible] = useState(false);
@@ -116,7 +116,7 @@ const SearchHotelsScreen: React.FC = () => {
       marginHorizontal: spacing.xl,
       borderRadius: radius.xl,
       padding: spacing.xl,
-      shadowColor: '#000',
+      shadowColor: colors.shadow,
       shadowOffset: {width: 0, height: 6},
       shadowOpacity: 0.05,
       shadowRadius: 15,
@@ -192,7 +192,7 @@ const SearchHotelsScreen: React.FC = () => {
       overflow: 'hidden',
       borderWidth: 1,
       borderColor: colors.border,
-      shadowColor: '#000',
+      shadowColor: colors.shadow,
       shadowOffset: {width: 0, height: 4},
       shadowOpacity: 0.04,
       shadowRadius: 8,
@@ -263,14 +263,14 @@ const SearchHotelsScreen: React.FC = () => {
     },
     hotelLocationText: {
       ...typography.caption,
-      color: '#999',
+      color: colors.textSecondary,
       fontSize: 11,
     },
   });
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
       
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>

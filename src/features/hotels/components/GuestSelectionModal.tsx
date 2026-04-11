@@ -89,7 +89,7 @@ const GuestSelectionModal: React.FC<GuestSelectionModalProps> = ({
     handle: {
       width: 40,
       height: 5,
-      backgroundColor: '#E0E0E0',
+      backgroundColor: colors.border,
       borderRadius: 10,
       alignSelf: 'center',
       marginBottom: spacing.md,
@@ -106,7 +106,7 @@ const GuestSelectionModal: React.FC<GuestSelectionModalProps> = ({
     },
     rowsContainer: {
       paddingHorizontal: spacing.xl,
-      backgroundColor: '#F9F9F9',
+      backgroundColor: colors.surface,
       marginHorizontal: spacing.xl,
       borderRadius: radius.xl,
       paddingVertical: spacing.md,
@@ -116,7 +116,7 @@ const GuestSelectionModal: React.FC<GuestSelectionModalProps> = ({
       alignItems: 'center',
       paddingVertical: spacing.lg,
       borderBottomWidth: 1,
-      borderBottomColor: '#F0F0F0',
+      borderBottomColor: colors.border,
     },
     labelContainer: {
       flex: 1,
@@ -140,7 +140,7 @@ const GuestSelectionModal: React.FC<GuestSelectionModalProps> = ({
     counterPill: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: '#F0F0F2',
+      backgroundColor: colors.surface,
       borderRadius: radius.full,
       padding: 4,
     },

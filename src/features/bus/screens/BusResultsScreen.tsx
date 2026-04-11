@@ -26,7 +26,7 @@ type BusResultsNavProp = NativeStackNavigationProp<BusStackParamList, 'BusResult
 const BusResultsScreen: React.FC = () => {
   const navigation = useNavigation<BusResultsNavProp>();
   const {t} = useTranslation();
-  const {colors, spacing, radius, typography} = useTheme();
+  const {colors, spacing, radius, typography, isDark} = useTheme();
   const {isRTL} = useRTL();
   const params = useAtomValue(busSearchParamsAtom);
   const [results, setResults] = useAtom(busResultsAtom);
@@ -177,7 +177,7 @@ const BusResultsScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar
-        barStyle={colors.background === '#F5F5F5' ? 'dark-content' : 'light-content'}
+        barStyle={isDark ? 'light-content' : 'dark-content'}
         backgroundColor={colors.card}
       />
 

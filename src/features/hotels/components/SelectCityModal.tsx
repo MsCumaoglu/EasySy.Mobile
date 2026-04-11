@@ -106,7 +106,7 @@ const SelectCityModal: React.FC<SelectCityModalProps> = ({
     handle: {
       width: 40,
       height: 5,
-      backgroundColor: '#E0E0E0',
+      backgroundColor: colors.border,
       borderRadius: 10,
       alignSelf: 'center',
       marginBottom: spacing.md,
@@ -128,7 +128,7 @@ const SelectCityModal: React.FC<SelectCityModalProps> = ({
     searchInputWrapper: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: '#F5F5F7',
+      backgroundColor: colors.surface,
       borderRadius: radius.lg,
       paddingHorizontal: spacing.md,
       height: 50,
@@ -182,7 +182,7 @@ const SelectCityModal: React.FC<SelectCityModalProps> = ({
       alignItems: 'center',
       paddingVertical: spacing.md,
       borderBottomWidth: 1,
-      borderBottomColor: '#F0F0F0',
+      borderBottomColor: colors.border,
     },
     iconContainer: {
       marginRight: spacing.md,
@@ -195,11 +195,11 @@ const SelectCityModal: React.FC<SelectCityModalProps> = ({
         alignItems: 'center',
         justifyContent: 'center',
         borderWidth: 1,
-        borderColor: '#EEE',
+        borderColor: colors.border,
     },
     cityIcon: {
       fontSize: 18,
-      color: '#BDBDBD',
+      color: colors.textSecondary,
     },
     cityInfo: {
       flex: 1,

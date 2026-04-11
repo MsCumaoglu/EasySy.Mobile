@@ -89,7 +89,7 @@ const SelectBusCityModal: React.FC<SelectBusCityModalProps> = ({
       paddingTop: spacing.sm,
     },
     handle: {
-      width: 40, height: 5, backgroundColor: '#E0E0E0',
+      width: 40, height: 5, backgroundColor: colors.border,
       borderRadius: 10, alignSelf: 'center', marginBottom: spacing.md,
     },
     header: {alignItems: 'center', paddingBottom: spacing.md},

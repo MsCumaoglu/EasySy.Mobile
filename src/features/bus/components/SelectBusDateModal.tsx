@@ -133,7 +133,7 @@ const SelectBusDateModal: React.FC<SelectBusDateModalProps> = ({
       height: SCREEN_HEIGHT * 0.88, paddingTop: spacing.sm,
     },
     handle: {
-      width: 40, height: 5, backgroundColor: '#E0E0E0',
+      width: 40, height: 5, backgroundColor: colors.border,
       borderRadius: 10, alignSelf: 'center', marginBottom: spacing.md,
     },
     headerRow: {

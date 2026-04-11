@@ -38,7 +38,7 @@ const POPULAR_CITIES = [
 const SearchBusScreen: React.FC = () => {
   const navigation = useNavigation<SearchBusNavProp>();
   const {t} = useTranslation();
-  const {colors, spacing, radius, typography} = useTheme();
+  const {colors, spacing, radius, typography, isDark} = useTheme();
   const [params, setParams] = useAtom(busSearchParamsAtom);
   const [loading, setLoading] = useState(false);
   const {isRTL, flipIcon} = useRTL();
@@ -87,7 +87,7 @@ const SearchBusScreen: React.FC = () => {
       marginHorizontal: spacing.xl,
       borderRadius: radius.xl,
       padding: spacing.xl,
-      shadowColor: '#000',
+      shadowColor: colors.shadow,
       shadowOffset: {width: 0, height: 6},
       shadowOpacity: 0.05,
       shadowRadius: 15,
@@ -149,7 +149,7 @@ const SearchBusScreen: React.FC = () => {
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.sm + 2,
       borderWidth: 1, borderColor: colors.border,
-      shadowColor: '#000',
+      shadowColor: colors.shadow,
       shadowOffset: {width: 0, height: 1},
       shadowOpacity: 0.04,
       shadowRadius: 4,
@@ -162,7 +162,7 @@ const SearchBusScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar
-        barStyle={colors.background === '#F5F5F5' ? 'dark-content' : 'light-content'}
+        barStyle={isDark ? 'light-content' : 'dark-content'}
         backgroundColor={colors.background}
       />
 
