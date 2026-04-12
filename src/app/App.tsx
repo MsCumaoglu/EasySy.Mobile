@@ -5,10 +5,12 @@ import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {useAtomValue} from 'jotai';
 import JotaiProvider from './providers/RecoilProvider';
 import ThemeProvider from './providers/ThemeProvider';
+import QueryProvider from './providers/QueryProvider';
 import RootNavigator from './navigation/RootNavigator';
 import {appLanguageAtom} from '../state/appAtoms';
 import i18n from '../localization/i18n';
 import '../localization/i18n';
+import {initDB} from '../core/database/db';
 
 /**
  * Inner component that can access Jotai atoms.
@@ -46,11 +48,21 @@ const AppContent: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  // Initialise SQLite database once on app startup.
+  // initDB() is idempotent — safe to call multiple times.
+  useEffect(() => {
+    initDB().catch(err =>
+      console.error('[App] SQLite init failed:', err),
+    );
+  }, []);
+
   return (
     <SafeAreaProvider>
-      <JotaiProvider>
-        <AppContent />
-      </JotaiProvider>
+      <QueryProvider>
+        <JotaiProvider>
+          <AppContent />
+        </JotaiProvider>
+      </QueryProvider>
     </SafeAreaProvider>
   );
 };

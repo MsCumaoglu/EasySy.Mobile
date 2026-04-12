@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   FlatList,
   TouchableOpacity,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import ScreenHeader from '../../../shared/components/ScreenHeader';
@@ -17,12 +18,12 @@ import dayjs from 'dayjs';
 import {HotelStackParamList} from '../../../app/navigation/types';
 import {useTheme} from '../../../app/providers/ThemeProvider';
 import {useRTL} from '../../../core/hooks/useRTL';
-import {hotelSearchParamsAtom, hotelResultsAtom, selectedHotelAtom} from '../state/hotelAtoms';
-import {hotelMockService} from '../services/hotelMockService';
+import {hotelSearchParamsAtom, selectedHotelAtom} from '../state/hotelAtoms';
 import {Hotel} from '../models/Hotel';
 import HotelCard from '../components/HotelCard';
 import Loader from '../../../shared/components/Loader';
-import { useTranslation } from 'react-i18next';
+import {useTranslation} from 'react-i18next';
+import {useHotelSearch} from '../hooks/useHotelSearch';
 
 type HotelResultsNavProp = NativeStackNavigationProp<
   HotelStackParamList,
@@ -33,31 +34,54 @@ const HotelResultsScreen: React.FC = () => {
   const navigation = useNavigation<HotelResultsNavProp>();
   const {colors, spacing, radius, typography, isDark} = useTheme();
   const params = useAtomValue(hotelSearchParamsAtom);
-  const [results, setResults] = useAtom(hotelResultsAtom);
   const [, setSelectedHotel] = useAtom(selectedHotelAtom);
-  const [loading, setLoading] = useState(true);
   const {t} = useTranslation();
   const {flipIcon} = useRTL();
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      try {
-        const data = await hotelMockService.searchHotels(params);
-        setResults(data);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [params, setResults]);
+  // ---------------------------------------------------------------------------
+  // Infinite query — replaces useEffect + useState
+  // ---------------------------------------------------------------------------
 
-  const handleSelectHotel = async (hotel: Hotel) => {
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+    refetch,
+  } = useHotelSearch(params);
+
+  /**
+   * Flatten all pages into a single array for FlatList.
+   * TanStack Query handles page merging automatically.
+   */
+  const hotels = data?.pages.flat() ?? [];
+
+  // ---------------------------------------------------------------------------
+  // Handlers
+  // ---------------------------------------------------------------------------
+
+  const handleSelectHotel = (hotel: Hotel) => {
+    // Store in Jotai so HotelDetailScreen can render instantly (initialData)
     setSelectedHotel(hotel);
     navigation.navigate('HotelDetail', {hotelId: hotel.id});
   };
 
-  // Format the date subtitle
+  const handleEndReached = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
+
+  const handleRefresh = () => {
+    refetch();
+  };
+
+  // ---------------------------------------------------------------------------
+  // Date / guest subtitle
+  // ---------------------------------------------------------------------------
+
   const formatShort = (d: string | null) =>
     d ? dayjs(d).format('D MMM').toUpperCase() : '---';
 
@@ -67,6 +91,10 @@ const HotelResultsScreen: React.FC = () => {
       : t('hotels.selectDates');
 
   const guestStr = `${params.guests}`;
+
+  // ---------------------------------------------------------------------------
+  // Styles
+  // ---------------------------------------------------------------------------
 
   const styles = StyleSheet.create({
     safeArea: {flex: 1, backgroundColor: colors.background},
@@ -82,10 +110,7 @@ const HotelResultsScreen: React.FC = () => {
       marginTop: 4,
       gap: spacing.sm,
     },
-    subtitleIcon: {
-      fontSize: 13,
-      color: colors.textSecondary,
-    },
+    subtitleIcon: {fontSize: 13, color: colors.textSecondary},
     subtitleText: {
       ...typography.caption,
       color: colors.textSecondary,
@@ -96,8 +121,6 @@ const HotelResultsScreen: React.FC = () => {
       color: colors.textSecondary,
       fontSize: 13,
     },
-
-    // Filter/Sort row
     controlsRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -134,10 +157,7 @@ const HotelResultsScreen: React.FC = () => {
       color: colors.textPrimary,
       fontWeight: '600',
     },
-    controlBtnIcon: {
-      fontSize: 14,
-      color: colors.textPrimary,
-    },
+    controlBtnIcon: {fontSize: 14, color: colors.textPrimary},
     list: {
       paddingHorizontal: spacing.xl,
       paddingTop: spacing.sm,
@@ -151,23 +171,56 @@ const HotelResultsScreen: React.FC = () => {
       paddingTop: 80,
     },
     emptyIcon: {fontSize: 50, color: colors.textSecondary},
-    emptyText: {...typography.subtitle, color: colors.textSecondary, marginTop: spacing.lg},
+    emptyText: {
+      ...typography.subtitle,
+      color: colors.textSecondary,
+      marginTop: spacing.lg,
+    },
+    footerLoader: {
+      paddingVertical: spacing.xl,
+      alignItems: 'center',
+    },
+    errorText: {
+      ...typography.caption,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginTop: spacing.lg,
+    },
+    retryBtn: {
+      marginTop: spacing.md,
+      alignSelf: 'center',
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.sm,
+      backgroundColor: colors.primary,
+      borderRadius: radius.md,
+    },
+    retryBtnText: {
+      ...typography.caption,
+      color: '#fff',
+      fontWeight: '600',
+    },
   });
 
-  if (loading) {
+  const subtitleNode = (
+    <View style={styles.subtitleRow}>
+      <Icon name="calendar-outline" style={styles.subtitleIcon} />
+      <Text style={styles.subtitleText}>{dateSubtitle}</Text>
+      <Text style={styles.subtitleSep}>{'|'}</Text>
+      <Icon name="people-outline" style={styles.subtitleIcon} />
+      <Text style={styles.subtitleText}>{guestStr}</Text>
+    </View>
+  );
+
+  // ---------------------------------------------------------------------------
+  // Loading state (first load only)
+  // ---------------------------------------------------------------------------
+
+  if (isLoading) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <ScreenHeader
           title={params.location || 'Hotels'}
-          subtitleNode={
-            <View style={styles.subtitleRow}>
-              <Icon name="calendar-outline" style={styles.subtitleIcon} />
-              <Text style={styles.subtitleText}>{dateSubtitle}</Text>
-              <Text style={styles.subtitleSep}> | </Text>
-              <Icon name="people-outline" style={styles.subtitleIcon} />
-              <Text style={styles.subtitleText}>{guestStr}</Text>
-            </View>
-          }
+          subtitleNode={subtitleNode}
           centered
           containerStyle={styles.header}
         />
@@ -175,6 +228,34 @@ const HotelResultsScreen: React.FC = () => {
       </SafeAreaView>
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // Error state
+  // ---------------------------------------------------------------------------
+
+  if (isError) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <ScreenHeader
+          title={params.location || 'Hotels'}
+          subtitleNode={subtitleNode}
+          centered
+          containerStyle={styles.header}
+        />
+        <View style={styles.emptyContainer}>
+          <Icon name="cloud-offline-outline" style={styles.emptyIcon} />
+          <Text style={styles.errorText}>{t('common.error')}</Text>
+          <TouchableOpacity style={styles.retryBtn} onPress={handleRefresh}>
+            <Text style={styles.retryBtnText}>{t('common.retry')}</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Main render
+  // ---------------------------------------------------------------------------
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -186,15 +267,7 @@ const HotelResultsScreen: React.FC = () => {
       {/* Header */}
       <ScreenHeader
         title={params.location || 'Hotels'}
-        subtitleNode={
-          <View style={styles.subtitleRow}>
-            <Icon name="calendar-outline" style={styles.subtitleIcon} />
-            <Text style={styles.subtitleText}>{dateSubtitle}</Text>
-            <Text style={styles.subtitleSep}> | </Text>
-            <Icon name="people-outline" style={styles.subtitleIcon} />
-            <Text style={styles.subtitleText}>{guestStr}</Text>
-          </View>
-        }
+        subtitleNode={subtitleNode}
         centered
         containerStyle={styles.header}
       />
@@ -202,7 +275,7 @@ const HotelResultsScreen: React.FC = () => {
       {/* Hotel count + Filter / Sort */}
       <View style={styles.controlsRow}>
         <Text style={styles.hotelCountText}>
-          {t('hotels.hotelList')} ({results.length})
+          {t('hotels.hotelList')} ({hotels.length})
         </Text>
         <View style={styles.controlsRight}>
           <TouchableOpacity style={styles.controlBtn} activeOpacity={0.75}>
@@ -216,18 +289,29 @@ const HotelResultsScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* List */}
+      {/* List with infinite scroll */}
       <FlatList
-        data={results}
+        data={hotels}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         renderItem={({item}) => (
-          <HotelCard
-            hotel={item}
-            onPress={() => handleSelectHotel(item)}
-          />
+          <HotelCard hotel={item} onPress={() => handleSelectHotel(item)} />
         )}
+        // Lazy loading: load next page when user is 50% from the bottom
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.5}
+        // Pull-to-refresh: invalidates SQLite cache and re-fetches from API
+        onRefresh={handleRefresh}
+        refreshing={isLoading}
+        // Footer: show spinner while next page is loading
+        ListFooterComponent={
+          isFetchingNextPage ? (
+            <View style={styles.footerLoader}>
+              <ActivityIndicator color={colors.primary} />
+            </View>
+          ) : null
+        }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Icon name="business-outline" style={styles.emptyIcon} />

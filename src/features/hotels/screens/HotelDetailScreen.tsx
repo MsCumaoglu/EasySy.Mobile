@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useRef, useState} from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,9 @@ import {useAtomValue} from 'jotai';
 import {HotelStackParamList} from '../../../app/navigation/types';
 import {useTheme} from '../../../app/providers/ThemeProvider';
 import {selectedHotelAtom} from '../state/hotelAtoms';
-import {hotelMockService} from '../services/hotelMockService';
+import {useHotelDetail} from '../hooks/useHotelDetail';
+import {useFavorites} from '../hooks/useFavorites';
+import {hotelRepository} from '../services/hotelRepository';
 import {HotelReview} from '../models/Hotel';
 import {HotelTab} from '../types/hotelTypes';
 import {formatCurrency} from '../../../core/utils/format';
@@ -27,6 +29,7 @@ import {useRTL} from '../../../core/hooks/useRTL';
 import PrimaryButton from '../../../shared/components/PrimaryButton';
 import Loader from '../../../shared/components/Loader';
 import Icon from 'react-native-vector-icons/Ionicons';
+import {useQuery} from '@tanstack/react-query';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
 const THUMB_SIZE = (SCREEN_WIDTH - 40 - 5) / 3; // 16px side padding x2 + 2 gaps x4
@@ -51,11 +54,30 @@ const HotelDetailScreen: React.FC = () => {
   const {t} = useTranslation();
   const {colors, spacing, radius, typography} = useTheme();
   const {isRTL, flipIcon} = useRTL();
+
+  // Jotai atom provides instant initial data (no loading flash when navigating from list)
   const selectedHotel = useAtomValue(selectedHotelAtom);
+  const hotelId = route.params.hotelId;
+
+  // Cache-first hotel detail (SQLite → API fallback)
+  const {data: hotel, isLoading: hotelLoading} = useHotelDetail(
+    hotelId,
+    selectedHotel,
+  );
+
+  // Cache-first reviews
+  const {data: reviews = []} = useQuery<HotelReview[]>({
+    queryKey: ['hotels', 'reviews', hotelId],
+    queryFn: () => hotelRepository.getHotelReviews(hotelId),
+    staleTime: 30 * 60 * 1000,
+    enabled: !!hotelId,
+  });
+
+  // Offline-persistent favorites via SQLite
+  const {isFavorite, toggle: toggleFavorite} = useFavorites(hotelId);
+
   const [activeTab, setActiveTab] = useState<HotelTab>('detail');
-  const [reviews, setReviews] = useState<HotelReview[]>([]);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [liked, setLiked] = useState(false);
   const [lightboxVisible, setLightboxVisible] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const lightboxRef = useRef<FlatList>(null);
@@ -64,14 +86,6 @@ const HotelDetailScreen: React.FC = () => {
     setLightboxIndex(index);
     setLightboxVisible(true);
   };
-
-  const hotel = selectedHotel;
-
-  useEffect(() => {
-    if (hotel) {
-      hotelMockService.getHotelReviews(hotel.id).then(setReviews);
-    }
-  }, [hotel]);
 
   const styles = StyleSheet.create({
     safeArea: {flex: 1, backgroundColor: colors.background},
@@ -396,7 +410,7 @@ const HotelDetailScreen: React.FC = () => {
     bookBtn: {flex: 1, marginLeft: spacing.lg},
   });
 
-  if (!hotel) {
+  if (hotelLoading || !hotel) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <Loader />
@@ -487,10 +501,10 @@ const HotelDetailScreen: React.FC = () => {
         <View style={styles.headerRightGroup}>
           <TouchableOpacity
             style={styles.headerIconBtn}
-            onPress={() => setLiked(l => !l)}>
+            onPress={() => toggleFavorite(hotelId)}>
             <Icon
-              name={liked ? 'heart' : 'heart-outline'}
-              style={liked ? styles.headerIconLiked : styles.headerIcon}
+              name={isFavorite ? 'heart' : 'heart-outline'}
+              style={isFavorite ? styles.headerIconLiked : styles.headerIcon}
             />
           </TouchableOpacity>
           <TouchableOpacity style={styles.headerIconBtn}>

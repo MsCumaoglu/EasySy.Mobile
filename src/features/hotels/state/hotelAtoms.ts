@@ -11,6 +11,6 @@ export const hotelSearchParamsAtom = atom<HotelSearchParams>({
   rooms: 1,
 });
 
-export const hotelResultsAtom = atom<Hotel[]>([]);
+// hotelResultsAtom removed — pagination is now managed by TanStack Query (useHotelSearch).
 
 export const selectedHotelAtom = atom<Hotel | null>(null);
