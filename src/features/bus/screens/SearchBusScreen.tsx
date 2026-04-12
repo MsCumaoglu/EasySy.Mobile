@@ -9,6 +9,7 @@ import {
   Image,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenHeader from '../../../shared/components/ScreenHeader';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useTranslation} from 'react-i18next';
@@ -58,21 +59,6 @@ const SearchBusScreen: React.FC = () => {
 
   const styles = StyleSheet.create({
     safeArea: {flex: 1, backgroundColor: colors.background},
-
-    /* ── Header ── */
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: spacing.xl,
-      paddingTop: spacing.lg,
-      paddingBottom: spacing.sm,
-    },
-    backBtn: {width: 32, height: 32, alignItems: 'flex-start', justifyContent: 'center'},
-    backIcon: {fontSize: 24, color: colors.primary},
-    headerTitle: {
-      ...typography.title, color: colors.textPrimary,
-      marginLeft: spacing.sm, fontSize: 22, fontWeight: '800',
-    },
 
     /* ── Illustration ── */
     illustrationContainer: {
@@ -166,13 +152,7 @@ const SearchBusScreen: React.FC = () => {
         backgroundColor={colors.background}
       />
 
-      {/* ── Header ── */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Icon name={flipIcon('arrow-back')} style={styles.backIcon} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('bus.searchTitle')}</Text>
-      </View>
+      <ScreenHeader title={t('bus.searchTitle')} />
 
       <ScrollView showsVerticalScrollIndicator={false}>
 

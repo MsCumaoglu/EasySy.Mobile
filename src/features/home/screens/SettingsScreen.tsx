@@ -11,6 +11,7 @@ import {
   SafeAreaView as RNSafeAreaView,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenHeader from '../../../shared/components/ScreenHeader';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useTranslation} from 'react-i18next';
@@ -66,26 +67,6 @@ const SettingsScreen: React.FC = () => {
 
   const styles = StyleSheet.create({
     safeArea: {flex: 1, backgroundColor: colors.background},
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: spacing.xl,
-      paddingTop: spacing.lg,
-      paddingBottom: spacing.md,
-      backgroundColor: colors.background,
-    },
-    backBtn: {
-      width: 40, height: 40, borderRadius: 20,
-      backgroundColor: colors.surface,
-      alignItems: 'center', justifyContent: 'center',
-    },
-    backIcon: {fontSize: 22, color: colors.textPrimary},
-    headerTitle: {
-      ...typography.title, color: colors.textPrimary,
-      fontWeight: '700', fontSize: 24,
-      marginLeft: isRTL ? 0 : spacing.lg,
-      marginRight: isRTL ? spacing.lg : 0,
-    },
     sectionHeader: {
       paddingHorizontal: spacing.xl,
       paddingTop: spacing.md,
@@ -323,12 +304,10 @@ const SettingsScreen: React.FC = () => {
         backgroundColor={colors.background}
       />
 
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Icon name={flipIcon('arrow-back')} style={styles.backIcon} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('settings.title')}</Text>
-      </View>
+      <ScreenHeader 
+        title={t('settings.title')} 
+        containerStyle={{paddingBottom: spacing.md}} 
+      />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         

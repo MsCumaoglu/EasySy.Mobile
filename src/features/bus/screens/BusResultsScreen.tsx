@@ -8,6 +8,7 @@ import {
   StatusBar,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenHeader from '../../../shared/components/ScreenHeader';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useTranslation} from 'react-i18next';
@@ -56,29 +57,13 @@ const BusResultsScreen: React.FC = () => {
     /* ── Header (matches HotelResultsScreen) ── */
     header: {
       backgroundColor: colors.card,
-      paddingHorizontal: spacing.xl,
-      paddingTop: spacing.lg,
-      paddingBottom: spacing.lg,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
-    },
-    headerTopRow: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      justifyContent: 'space-between',
-    },
-    headerLeft: {flex: 1},
-    routeTitle: {
-      ...typography.title,
-      fontSize: 20,
-      fontWeight: '800',
-      color: colors.textPrimary,
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
     },
     subtitleRow: {
       flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'center',
       marginTop: 4,
       gap: spacing.sm,
     },
@@ -93,14 +78,7 @@ const BusResultsScreen: React.FC = () => {
       color: colors.textSecondary,
       fontSize: 13,
     },
-    closeBtn: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    closeBtnIcon: {fontSize: 26, color: colors.primary},
+
 
     /* ── Controls row ── */
     controlsRow: {
@@ -148,27 +126,20 @@ const BusResultsScreen: React.FC = () => {
   if (loading) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.header}>
-          <View style={styles.headerTopRow}>
-            <View style={styles.headerLeft}>
-              <Text style={styles.routeTitle}>
-                {params.from && params.to
-                  ? `${params.from} → ${params.to}`
-                  : t('bus.results')}
-              </Text>
-              <View style={styles.subtitleRow}>
-                <Icon name="calendar-outline" style={styles.subtitleIcon} />
-                <Text style={styles.subtitleText}>{dateStr}</Text>
-                <Text style={styles.subtitleSep}>|</Text>
-                <Icon name="people-outline" style={styles.subtitleIcon} />
-                <Text style={styles.subtitleText}>{params.passengers}</Text>
-              </View>
+        <ScreenHeader
+          title={params.from && params.to ? `${params.from} → ${params.to}` : t('bus.results')}
+          subtitleNode={
+            <View style={styles.subtitleRow}>
+              <Icon name="calendar-outline" style={styles.subtitleIcon} />
+              <Text style={styles.subtitleText}>{dateStr}</Text>
+              <Text style={styles.subtitleSep}>|</Text>
+              <Icon name="people-outline" style={styles.subtitleIcon} />
+              <Text style={styles.subtitleText}>{params.passengers}</Text>
             </View>
-            <TouchableOpacity style={styles.closeBtn} onPress={() => navigation.goBack()}>
-              <Icon name="close" style={styles.closeBtnIcon} />
-            </TouchableOpacity>
-          </View>
-        </View>
+          }
+          centered
+          containerStyle={styles.header}
+        />
         <Loader message={t('common.loading')} />
       </SafeAreaView>
     );
@@ -182,27 +153,20 @@ const BusResultsScreen: React.FC = () => {
       />
 
       {/* ── Header ── */}
-      <View style={styles.header}>
-        <View style={styles.headerTopRow}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.routeTitle}>
-              {params.from && params.to
-                ? `${params.from} → ${params.to}`
-                : t('bus.results')}
-            </Text>
-            <View style={styles.subtitleRow}>
-              <Icon name="calendar-outline" style={styles.subtitleIcon} />
-              <Text style={styles.subtitleText}>{dateStr}</Text>
-              <Text style={styles.subtitleSep}>|</Text>
-              <Icon name="people-outline" style={styles.subtitleIcon} />
-              <Text style={styles.subtitleText}>{params.passengers}</Text>
-            </View>
+      <ScreenHeader
+        title={params.from && params.to ? `${params.from} → ${params.to}` : t('bus.results')}
+        subtitleNode={
+          <View style={styles.subtitleRow}>
+            <Icon name="calendar-outline" style={styles.subtitleIcon} />
+            <Text style={styles.subtitleText}>{dateStr}</Text>
+            <Text style={styles.subtitleSep}>|</Text>
+            <Icon name="people-outline" style={styles.subtitleIcon} />
+            <Text style={styles.subtitleText}>{params.passengers}</Text>
           </View>
-          <TouchableOpacity style={styles.closeBtn} onPress={() => navigation.goBack()}>
-            <Icon name="close" style={styles.closeBtnIcon} />
-          </TouchableOpacity>
-        </View>
-      </View>
+        }
+        centered
+        containerStyle={styles.header}
+      />
 
       {/* ── Trip count + Filter / Sort ── */}
       <View style={styles.controlsRow}>

@@ -11,6 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenHeader from '../../../shared/components/ScreenHeader';
 import {useNavigation} from '@react-navigation/native';
 import {useTranslation} from 'react-i18next';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -28,26 +29,6 @@ const ProfileEditScreen: React.FC = () => {
 
   const styles = StyleSheet.create({
     safeArea: {flex: 1, backgroundColor: colors.background},
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: spacing.xl,
-      paddingTop: spacing.lg,
-      paddingBottom: spacing.md,
-      backgroundColor: colors.background,
-    },
-    backBtn: {
-      width: 40, height: 40, borderRadius: 20,
-      backgroundColor: colors.surface,
-      alignItems: 'center', justifyContent: 'center',
-    },
-    backIcon: {fontSize: 22, color: colors.textPrimary},
-    headerTitle: {
-      ...typography.title, color: colors.textPrimary,
-      fontWeight: '700', fontSize: 24,
-      marginLeft: isRTL ? 0 : spacing.lg,
-      marginRight: isRTL ? spacing.lg : 0,
-    },
     saveBtn: {
       marginLeft: 'auto',
       paddingHorizontal: spacing.md,
@@ -144,15 +125,15 @@ const ProfileEditScreen: React.FC = () => {
         style={{flex: 1}} 
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Icon name={flipIcon('arrow-back')} style={styles.backIcon} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{t('settings.editProfile', {defaultValue: 'Edit Profile'})}</Text>
-          <TouchableOpacity style={styles.saveBtn} onPress={() => navigation.goBack()}>
-            <Text style={styles.saveBtnText}>{t('common.save', {defaultValue: 'Save'})}</Text>
-          </TouchableOpacity>
-        </View>
+        <ScreenHeader 
+          title={t('settings.editProfile', {defaultValue: 'Edit Profile'})}
+          containerStyle={{paddingBottom: spacing.md}}
+          rightNode={
+            <TouchableOpacity style={styles.saveBtn} onPress={() => navigation.goBack()}>
+              <Text style={styles.saveBtnText}>{t('common.save', {defaultValue: 'Save'})}</Text>
+            </TouchableOpacity>
+          }
+        />
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           
