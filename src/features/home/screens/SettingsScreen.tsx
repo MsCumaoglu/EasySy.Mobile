@@ -9,6 +9,7 @@ import {
   Modal,
   TouchableWithoutFeedback,
   SafeAreaView as RNSafeAreaView,
+  Image,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import ScreenHeader from '../../../shared/components/ScreenHeader';
@@ -20,6 +21,8 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import {RootStackParamList} from '../../../app/navigation/types';
 import {useTheme} from '../../../app/providers/ThemeProvider';
 import {appThemeAtom, appLanguageAtom, appCurrencyAtom, AppLanguage, AppCurrency} from '../../../state/appAtoms';
+import {userAtom, isGuestAtom} from '../../../core/auth/authAtoms';
+import {authService} from '../../../core/auth/authService';
 import {useRTL} from '../../../core/hooks/useRTL';
 import i18n from '../../../localization/i18n';
 
@@ -54,6 +57,10 @@ const SettingsScreen: React.FC = () => {
   const [theme, setTheme] = useAtom(appThemeAtom);
   const [language, setLanguage] = useAtom(appLanguageAtom);
   const [currency, setCurrency] = useAtom(appCurrencyAtom);
+  
+  // Auth state
+  const [user, setUser] = useAtom(userAtom);
+  const [, setGuest] = useAtom(isGuestAtom);
   const {isRTL, flipIcon} = useRTL();
 
   const [activeModal, setActiveModal] = useState<'language' | 'theme' | 'currency' | null>(null);
@@ -63,6 +70,22 @@ const SettingsScreen: React.FC = () => {
     await i18n.changeLanguage(lang);
     setLanguage(lang);
     setActiveModal(null);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await authService.signOut();
+      setUser(null);
+      setGuest(true);
+    } catch (e) {
+      console.log('Error logging out', e);
+    }
+  };
+
+  const handleLoginNav = () => {
+    // When a guest clicks Login, just turn guest mode off 
+    // to route them back to LoginScreen
+    setGuest(false);
   };
 
   const styles = StyleSheet.create({
@@ -312,15 +335,30 @@ const SettingsScreen: React.FC = () => {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         
         {/* ── Google Profile summary ── */}
-        <View style={styles.googleProfileCard}>
-          <View style={styles.googleProfileAvatar}>
-            <Icon name="logo-google" style={{fontSize: 28, color: '#DB4437'}} />
+        {user ? (
+          <View style={styles.googleProfileCard}>
+            <View style={styles.googleProfileAvatar}>
+              <Image 
+                source={{uri: user.photoUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name)}} 
+                style={{width: 56, height: 56, borderRadius: 28}} 
+              />
+            </View>
+            <View style={styles.googleProfileTextWrap}>
+              <Text style={styles.googleProfileName}>{user.name}</Text>
+              <Text style={styles.googleProfileEmail}>{user.email}</Text>
+            </View>
           </View>
-          <View style={styles.googleProfileTextWrap}>
-            <Text style={styles.googleProfileName}>Google User</Text>
-            <Text style={styles.googleProfileEmail}>google.user@gmail.com</Text>
-          </View>
-        </View>
+        ) : (
+          <TouchableOpacity style={styles.googleProfileCard} onPress={handleLoginNav} activeOpacity={0.8}>
+            <View style={styles.googleProfileAvatar}>
+              <Icon name="person-circle-outline" style={{fontSize: 32, color: colors.primary}} />
+            </View>
+            <View style={styles.googleProfileTextWrap}>
+              <Text style={styles.googleProfileName}>Guest User</Text>
+              <Text style={styles.googleProfileEmail}>Tap to Log In or Register</Text>
+            </View>
+          </TouchableOpacity>
+        )}
         {/* ── Account Section ── */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>{t('settings.account', {defaultValue: 'Account'})}</Text>
@@ -450,12 +488,14 @@ const SettingsScreen: React.FC = () => {
         </View>
 
         {/* ── Logout Button ── */}
-        <TouchableOpacity style={styles.logoutBtn} onPress={() => {/* LOGOUT LOGIC HERE */}} activeOpacity={0.7}>
-          <Text style={styles.logoutBtnText}>{t('settings.logout', {defaultValue: 'Log Out'})}</Text>
-        </TouchableOpacity>
+        {user ? (
+          <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.8} onPress={handleLogout}>
+            <Text style={styles.logoutBtnText}>{t('settings.logout', {defaultValue: 'Log Out'})}</Text>
+          </TouchableOpacity>
+        ) : null}
 
         <View style={styles.versionRow}>
-          <Text style={styles.versionText}>EasySy Travel · v{t('settings.version', {defaultValue: '1.0.0'})}</Text>
+          <Text style={styles.versionText}>EasySy v{t('settings.version', {defaultValue: '1.0.0'})}</Text>
         </View>
 
       </ScrollView>

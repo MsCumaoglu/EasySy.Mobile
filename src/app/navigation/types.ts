@@ -12,6 +12,8 @@ export type BusStackParamList = {
 };
 
 export type RootStackParamList = {
+  LanguageSelection: undefined;
+  Login: undefined;
   Home: undefined;
   Settings: undefined;
   ProfileEdit: undefined;

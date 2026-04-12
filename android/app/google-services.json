@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1011921763198",
+    "project_id": "easysy",
+    "storage_bucket": "easysy.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1011921763198:android:97ef8e30ae3f6746a2512f",
+        "android_client_info": {
+          "package_name": "com.easysy"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1011921763198-8dbki9j753dv181m8c7he70sofr31n8q.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBaH9dg6LABeAe3CF5DpvEKsStlMGtCprI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1011921763198-8dbki9j753dv181m8c7he70sofr31n8q.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

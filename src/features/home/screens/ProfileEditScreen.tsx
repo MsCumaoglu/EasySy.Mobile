@@ -9,22 +9,26 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import ScreenHeader from '../../../shared/components/ScreenHeader';
 import {useNavigation} from '@react-navigation/native';
 import {useTranslation} from 'react-i18next';
+import {useAtomValue} from 'jotai';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {useTheme} from '../../../app/providers/ThemeProvider';
 import {useRTL} from '../../../core/hooks/useRTL';
+import {userAtom} from '../../../core/auth/authAtoms';
 
 const ProfileEditScreen: React.FC = () => {
   const navigation = useNavigation();
   const {t} = useTranslation();
   const {colors, spacing, radius, typography} = useTheme();
   const {isRTL, flipIcon} = useRTL();
+  const user = useAtomValue(userAtom);
 
-  const [name, setName] = useState('Google User');
+  const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState('+1 234 567 8900');
 
   const styles = StyleSheet.create({
@@ -138,15 +142,20 @@ const ProfileEditScreen: React.FC = () => {
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           
           {/* Google Linked Account Banner */}
-          <View style={styles.googleBanner}>
-            <View style={styles.googleIconWrap}>
-              <Icon name="logo-google" style={{fontSize: 24, color: '#DB4437'}} />
+          {user ? (
+            <View style={styles.googleBanner}>
+              <View style={styles.googleIconWrap}>
+                <Image 
+                  source={{uri: user.photoUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name)}} 
+                  style={{width: 48, height: 48, borderRadius: 24}} 
+                />
+              </View>
+              <View style={styles.googleBannerTextWrap}>
+                <Text style={styles.googleBannerTitle}>Signed in with Google</Text>
+                <Text style={styles.googleBannerSubtitle}>Your email and profile photo are managed by Google.</Text>
+              </View>
             </View>
-            <View style={styles.googleBannerTextWrap}>
-              <Text style={styles.googleBannerTitle}>Signed in with Google</Text>
-              <Text style={styles.googleBannerSubtitle}>Your email and profile photo are managed by Google.</Text>
-            </View>
-          </View>
+          ) : null}
 
           {/* Form Fields */}
           <View style={styles.formGroup}>
@@ -168,7 +177,7 @@ const ProfileEditScreen: React.FC = () => {
               <Icon name="mail-outline" style={styles.inputIcon} />
               <TextInput
                 style={[styles.input, styles.inputDisabled]}
-                value="google.user@gmail.com"
+                value={user?.email || ''}
                 editable={false}
                 pointerEvents="none"
               />
