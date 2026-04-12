@@ -14,6 +14,7 @@ export type BusStackParamList = {
 export type RootStackParamList = {
   Home: undefined;
   Settings: undefined;
+  ProfileEdit: undefined;
   HotelStack: NavigatorScreenParams<HotelStackParamList>;
   BusStack: NavigatorScreenParams<BusStackParamList>;
 };
