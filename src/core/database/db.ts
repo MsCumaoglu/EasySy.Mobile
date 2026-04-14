@@ -47,15 +47,21 @@ export async function initDB(): Promise<void> {
   const currentVersion: number =
     (versionResult.rows?.[0]?.user_version as number) ?? 0;
 
-  if (currentVersion < 1) {
-    // Run v1 migrations inside a transaction for atomicity
-    _db.transaction(async (tx: any) => {
-      for (const sql of CREATE_TABLES_V1) {
-        tx.executeSync(sql);
-      }
-    });
-    _db.executeSync(`PRAGMA user_version = ${CURRENT_DB_VERSION}`);
+  // Run v1 migrations block synchronously.
+  // Using IF NOT EXISTS makes it safe to run unconditionally during dev.
+  _db.executeSync('BEGIN TRANSACTION');
+  try {
+    for (const sql of CREATE_TABLES_V1) {
+      _db.executeSync(sql);
+    }
+    _db.executeSync('COMMIT');
+  } catch (e) {
+    _db.executeSync('ROLLBACK');
+    console.error('[DB] Failed to create tables:', e);
+  }
 
+  if (currentVersion < 1) {
+    _db.executeSync(`PRAGMA user_version = ${CURRENT_DB_VERSION}`);
     // Seed static city data on fresh install
     await _seedCities();
   }

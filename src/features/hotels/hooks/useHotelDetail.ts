@@ -15,6 +15,7 @@
 import {useQuery} from '@tanstack/react-query';
 import {hotelRepository} from '../services/hotelRepository';
 import {Hotel} from '../models/Hotel';
+import {useTranslation} from 'react-i18next';
 
 export function useHotelDetail(
   hotelId: string,
@@ -24,8 +25,10 @@ export function useHotelDetail(
    */
   initialData?: Hotel | null,
 ) {
+  const { i18n } = useTranslation();
+
   return useQuery({
-    queryKey: ['hotels', 'detail', hotelId] as const,
+    queryKey: ['hotels', 'detail', hotelId, i18n.language] as const,
     queryFn: () => hotelRepository.getHotelById(hotelId),
 
     /**
@@ -36,10 +39,12 @@ export function useHotelDetail(
 
     /**
      * initialData: Use the data already in memory (from Jotai atom) as a
-     * placeholder. TanStack Query will still re-fetch in the background to
-     * get the latest data, but the user sees content immediately.
+     * placeholder. By setting initialDataUpdatedAt: 0, TanStack Query will
+     * immediately re-fetch in the background to get the full details while
+     * still showing the cached partial data instantly.
      */
     initialData: initialData ?? undefined,
+    initialDataUpdatedAt: initialData ? 0 : undefined,
 
     enabled: !!hotelId,
   });

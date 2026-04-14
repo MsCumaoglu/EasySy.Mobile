@@ -9,6 +9,7 @@
     "error": "Bir şeyler yanlış gitti",
     "noResults": "Sonuç bulunamadı",
     "bookNow": "Rezervasyon Yap",
+    "retry": "Tekrar Dene",
     "seeAll": "Tümünü Gör",
     "from": "Kalkış",
     "to": "Varış",
@@ -24,6 +25,8 @@
     "children": "Çocuk",
     "rooms": "Oda",
     "apply": "Uygula",
+    "reset": "Sıfırla",
+    "applyFilters": "Filtreleri Uygula",
     "room": "Oda",
     "adult": "Yetişkin",
     "child": "Çocuk",
@@ -33,7 +36,9 @@
     "searchResults": "Arama Sonuçları",
     "popularCities": "Popüler Şehirler",
     "useCurrentLocation": "Mevcut konumu kullan",
-    "noDateSelected": "Tarih seçilmedi"
+    "noDateSelected": "Tarih seçilmedi",
+    "allowed": "İzin veriliyor",
+    "notAllowed": "İzin verilmiyor"
   },
   "home": {
     "slogan": "Seyahat et ve Keşfet",
@@ -87,7 +92,29 @@
     "checkInCheckOut": "Giriş - Çıkış",
     "startDate": "Başlangıç",
     "endDate": "Bitiş",
-    "noReviews": "Henüz yorum yok."
+    "noReviews": "Henüz yorum yok.",
+    "policies": "Kurallar",
+    "children": "Çocuk",
+    "pets": "Evcil Hayvan",
+    "smoking": "Sigara İçmek",
+    "filters": {
+      "priceRange": "Fiyat Aralığı",
+      "minRating": "Minimum Puan",
+      "category": "Kategori"
+    },
+    "category": {
+      "luxury": "Lüks",
+      "business": "İş",
+      "resort": "Tatil Köyü",
+      "budget": "Ekonomik"
+    },
+    "sort": {
+      "recommended": "Önerilen",
+      "priceAsc": "Fiyat: Düşükten Yükseğe",
+      "priceDesc": "Fiyat: Yüksekten Düşüğe",
+      "ratingDesc": "En Yüksek Puan",
+      "nameAsc": "İsim: A'dan Z'ye"
+    }
   },
   "bus": {
     "searchTitle": "Otobüs Ara",
@@ -110,7 +137,36 @@
     "departureCity": "Kalkış Şehri",
     "destinationCity": "Varış Şehri",
     "passengers": "Yolcu",
-    "perPerson": "kişi başı"
+    "perPerson": "kişi başı",
+    "filters": {
+      "busType": "Otobüs Tipi",
+      "priceRange": "Fiyat Aralığı",
+      "departureTime": "Kalkış Saati",
+      "morning": "Sabah",
+      "afternoon": "Öğleden Sonra",
+      "evening": "Akşam",
+      "night": "Gece"
+    },
+    "type": {
+      "standard": "Standart",
+      "vip": "VIP",
+      "express": "Ekspres"
+    },
+    "amenities": {
+      "title": "Olanaklar",
+      "ac": "Klima",
+      "wifi": "Ücretsiz WiFi",
+      "usb": "USB Şarj",
+      "snacks": "Atıştırmalık",
+      "toilet": "Tuvalet"
+    },
+    "sort": {
+      "recommended": "Önerilen",
+      "priceAsc": "Fiyat: Düşükten Yükseğe",
+      "priceDesc": "Fiyat: Yüksekten Düşüğe",
+      "earliestDeparture": "En Erken Kalkış",
+      "shortestDuration": "En Kısa Süre"
+    }
   },
   "settings": {
     "title": "Ayarlar",

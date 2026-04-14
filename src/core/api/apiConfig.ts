@@ -9,7 +9,7 @@ export const API_CONFIG = {
   // Development
   // Using 10.0.2.2 so Android Emulator can reach host machine's localhost
   DEV_SERVICES: {
-    hotel: 'http://10.0.2.2:5001',
+    hotel: 'http://10.0.2.2:8080',
     bus: 'http://10.0.2.2:5002',
     tour: 'http://10.0.2.2:5003',
   }

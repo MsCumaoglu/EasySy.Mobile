@@ -19,7 +19,7 @@ apiClient.interceptors.request.use(
       const url = config.url || '';
       
       // Route to correct microservice based on endpoint prefix
-      if (url.startsWith('/hotel')) {
+      if (url.startsWith('/api/v1')) {
         config.baseURL = API_CONFIG.DEV_SERVICES.hotel;
       } else if (url.startsWith('/bus')) {
         config.baseURL = API_CONFIG.DEV_SERVICES.bus;

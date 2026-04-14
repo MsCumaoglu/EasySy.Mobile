@@ -9,6 +9,7 @@
     "error": "Something went wrong",
     "noResults": "No results found",
     "bookNow": "Book Now",
+    "retry": "Retry",
     "seeAll": "See All",
     "from": "From",
     "to": "To",
@@ -24,6 +25,8 @@
     "children": "Children",
     "rooms": "Rooms",
     "apply": "Apply",
+    "reset": "Reset",
+    "applyFilters": "Apply Filters",
     "room": "Room",
     "adult": "Adult",
     "child": "Child",
@@ -33,7 +36,9 @@
     "searchResults": "Search Results",
     "popularCities": "Popular Cities",
     "useCurrentLocation": "Use current location",
-    "noDateSelected": "No date selected"
+    "noDateSelected": "No date selected",
+    "allowed": "Allowed",
+    "notAllowed": "Not Allowed"
   },
   "home": {
     "slogan": "Travel and Explore",
@@ -88,7 +93,29 @@
     "checkInCheckOut": "Check-in - Check-out",
     "startDate": "Start Date",
     "endDate": "End Date",
-    "noReviews": "No reviews yet."
+    "noReviews": "No reviews yet.",
+    "policies": "Policies",
+    "children": "Children",
+    "pets": "Pets",
+    "smoking": "Smoking",
+    "filters": {
+      "priceRange": "Price Range",
+      "minRating": "Minimum Rating",
+      "category": "Category"
+    },
+    "category": {
+      "luxury": "Luxury",
+      "business": "Business",
+      "resort": "Resort",
+      "budget": "Budget"
+    },
+    "sort": {
+      "recommended": "Recommended",
+      "priceAsc": "Price: Low to High",
+      "priceDesc": "Price: High to Low",
+      "ratingDesc": "Highest Rated",
+      "nameAsc": "Name: A–Z"
+    }
   },
   "bus": {
     "searchTitle": "Search Bus Travel",
@@ -111,7 +138,36 @@
     "departureCity": "From — Departure City",
     "destinationCity": "To — Destination City",
     "passengers": "Passengers",
-    "perPerson": "per person"
+    "perPerson": "per person",
+    "filters": {
+      "busType": "Bus Type",
+      "priceRange": "Price Range",
+      "departureTime": "Departure Time",
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "evening": "Evening",
+      "night": "Night"
+    },
+    "type": {
+      "standard": "Standard",
+      "vip": "VIP",
+      "express": "Express"
+    },
+    "amenities": {
+      "title": "Amenities",
+      "ac": "Air Conditioning",
+      "wifi": "Free WiFi",
+      "usb": "USB Charging",
+      "snacks": "Snacks",
+      "toilet": "Toilet"
+    },
+    "sort": {
+      "recommended": "Recommended",
+      "priceAsc": "Price: Low to High",
+      "priceDesc": "Price: High to Low",
+      "earliestDeparture": "Earliest Departure",
+      "shortestDuration": "Shortest Duration"
+    }
   },
   "settings": {
     "title": "Settings",

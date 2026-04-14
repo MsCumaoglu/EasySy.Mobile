@@ -9,9 +9,13 @@ import {
   TextInput,
   TouchableWithoutFeedback,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {useTheme} from '../../../app/providers/ThemeProvider';
+import {useTranslation} from 'react-i18next';
+import {useQuery} from '@tanstack/react-query';
+import {hotelRepository} from '../services/hotelRepository';
 
 const {height: SCREEN_HEIGHT} = Dimensions.get('window');
 
@@ -19,15 +23,8 @@ interface City {
   id: string;
   name: string;
   count: number;
+  country: string;
 }
-
-const CITIES: City[] = [
-  {id: '1', name: 'Damascus', count: 18},
-  {id: '2', name: 'Damascus', count: 15},
-  {id: '3', name: 'Hama', count: 9},
-  {id: '4', name: 'Hasakaha', count: 5},
-  {id: '5', name: 'Ariha', count: 8},
-];
 
 interface SelectCityModalProps {
   isVisible: boolean;
@@ -42,15 +39,35 @@ const SelectCityModal: React.FC<SelectCityModalProps> = ({
   onSelect,
   initialValue = '',
 }) => {
+  const {t, i18n} = useTranslation();
   const {colors, spacing, radius, typography} = useTheme();
   const [query, setQuery] = useState(initialValue);
+
+  const {data: locations = [], isLoading} = useQuery({
+    queryKey: ['hotelLocations'],
+    queryFn: () => hotelRepository.fetchLocations(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const CITIES: City[] = locations.map(loc => {
+    const lang = i18n.language;
+    const isAr = lang === 'ar';
+    const isTr = lang === 'tr';
+    const name = isAr ? (loc.nameAr || loc.name) : isTr ? (loc.nameTr || loc.name) : (loc.nameEn || loc.name);
+    return {
+      id: loc.id,
+      name: name,
+      count: loc.hotelCount || 0,
+      country: loc.country,
+    };
+  });
 
   const filteredCities = useMemo(() => {
     if (!query) return CITIES;
     return CITIES.filter(city =>
       city.name.toLowerCase().includes(query.toLowerCase())
     );
-  }, [query]);
+  }, [query, CITIES]);
 
   const renderHighlightText = (text: string, highlight: string) => {
     if (!highlight.trim()) return <Text style={styles.cityName}>{text}</Text>;
@@ -85,7 +102,7 @@ const SelectCityModal: React.FC<SelectCityModalProps> = ({
       </View>
       <View style={styles.cityInfo}>
         {renderHighlightText(item.name, query)}
-        <Text style={styles.hotelCount}>{item.count} Hotels</Text>
+        <Text style={styles.hotelCount}>{item.count} {t('hotels.hotelCountSuffix') || 'Hotels'}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -231,7 +248,7 @@ const SelectCityModal: React.FC<SelectCityModalProps> = ({
               <View style={styles.handle} />
               
               <View style={styles.header}>
-                <Text style={styles.title}>Select City</Text>
+                <Text style={styles.title}>{t('hotels.selectCity')}</Text>
               </View>
 
               <View style={styles.searchContainer}>
@@ -239,7 +256,7 @@ const SelectCityModal: React.FC<SelectCityModalProps> = ({
                   <Icon name="search-outline" style={styles.searchIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Search"
+                    placeholder={t('common.search')}
                     placeholderTextColor={colors.textSecondary}
                     value={query}
                     onChangeText={setQuery}
@@ -253,21 +270,27 @@ const SelectCityModal: React.FC<SelectCityModalProps> = ({
                   <View style={styles.targetIconWrapper}>
                     <Icon name="locate" style={styles.targetIcon} />
                   </View>
-                  <Text style={styles.currentLocationText}>Use current location</Text>
+                  <Text style={styles.currentLocationText}>{t('hotels.useCurrentLocation')}</Text>
                 </TouchableOpacity>
               )}
 
               <Text style={styles.sectionTitle}>
-                {query ? 'Search Results' : 'Popular Cities'}
+                {query ? t('hotels.searchResults') : t('hotels.popularCities')}
               </Text>
 
-              <FlatList
-                data={filteredCities}
-                keyExtractor={item => item.id}
-                renderItem={renderCityItem}
-                contentContainerStyle={styles.cityList}
-                showsVerticalScrollIndicator={false}
-              />
+              {isLoading ? (
+                <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+                  <ActivityIndicator size="large" color={colors.primary} />
+                </View>
+              ) : (
+                <FlatList
+                  data={filteredCities}
+                  keyExtractor={item => item.id}
+                  renderItem={renderCityItem}
+                  contentContainerStyle={styles.cityList}
+                  showsVerticalScrollIndicator={false}
+                />
+              )}
             </View>
           </TouchableWithoutFeedback>
         </View>

@@ -173,24 +173,29 @@ export const reviewDao = {
 };
 
 // ---------------------------------------------------------------------------
-// City search (instant suggestions — always from local DB)
+// Dynamic Location Search (from API cache)
 // ---------------------------------------------------------------------------
 
-export const cityDao = {
-  /**
-   * Returns up to `limit` cities whose name starts with `query`.
-   * Supports all three languages (EN, AR, TR).
-   */
-  search(query: string, limit: number = 8): string[] {
-    if (!query || query.trim().length === 0) {return [];}
+export const locationDao = {
+  getLocations(): any[] | null {
     const db = getDB();
-    const pattern = `${query.trim()}%`;
     const result = db.executeSync(
-      `SELECT name_en FROM cities
-       WHERE name_en LIKE ? OR name_ar LIKE ? OR name_tr LIKE ?
-       LIMIT ?`,
-      [pattern, pattern, pattern, limit],
+      'SELECT result_ids, cached_at FROM hotel_searches WHERE search_key = ?',
+      ['all_locations'],
     );
-    return (result.rows ?? []).map((r: any) => r.name_en as string);
+    const row = result.rows?.[0];
+    if (!row) {return null;}
+    // 24 hours TTL for locations
+    if (isStale(row.cached_at as number, 24 * 60 * 60 * 1000)) {return null;}
+    return JSON.parse(row.result_ids as string);
+  },
+
+  insertLocations(locations: any[]): void {
+    const db = getDB();
+    db.executeSync(
+      `INSERT OR REPLACE INTO hotel_searches (search_key, result_ids, cached_at)
+       VALUES (?, ?, ?)`,
+      ['all_locations', JSON.stringify(locations), now()],
+    );
   },
 };

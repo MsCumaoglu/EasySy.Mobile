@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useMemo, useState} from 'react';
 import {
   View,
   Text,
@@ -21,8 +21,66 @@ import {busMockService} from '../services/busMockService';
 import BusTripCard from '../components/BusTripCard';
 import Loader from '../../../shared/components/Loader';
 import Icon from 'react-native-vector-icons/Ionicons';
+import BusFilterModal, {BusFilters} from '../components/BusFilterModal';
+import BusSortModal, {BusSortOption} from '../components/BusSortModal';
+import {BusTrip} from '../models/BusTrip';
+import {useEffect} from 'react';
 
 type BusResultsNavProp = NativeStackNavigationProp<BusStackParamList, 'BusResults'>;
+
+// ---------------------------------------------------------------------------
+// Helpers — client-side filter & sort
+// ---------------------------------------------------------------------------
+
+function departureToMinutes(time: string): number {
+  const [h, m] = time.split(':').map(Number);
+  return h * 60 + (m ?? 0);
+}
+
+function matchesDepartureSlot(
+  time: string,
+  slot: BusFilters['departureSlot'],
+): boolean {
+  const mins = departureToMinutes(time);
+  switch (slot) {
+    case 'morning':   return mins >= 0 && mins < 12 * 60;
+    case 'afternoon': return mins >= 12 * 60 && mins < 17 * 60;
+    case 'evening':   return mins >= 17 * 60 && mins < 21 * 60;
+    case 'night':     return mins >= 21 * 60;
+    default:          return true;
+  }
+}
+
+function applyFilters(trips: BusTrip[], filters: BusFilters): BusTrip[] {
+  return trips.filter(tr => {
+    if (filters.busType && tr.busType !== filters.busType) {return false;}
+    if (filters.maxPrice !== undefined && tr.price > filters.maxPrice) {return false;}
+    if (filters.departureSlot && !matchesDepartureSlot(tr.departureTime, filters.departureSlot)) {return false;}
+    if (filters.amenities && filters.amenities.length > 0) {
+      if (!filters.amenities.every(a => tr.amenities.includes(a))) {return false;}
+    }
+    return true;
+  });
+}
+
+function applySort(trips: BusTrip[], sort: BusSortOption): BusTrip[] {
+  const arr = [...trips];
+  switch (sort) {
+    case 'price_asc':       return arr.sort((a, b) => a.price - b.price);
+    case 'price_desc':      return arr.sort((a, b) => b.price - a.price);
+    case 'departure_asc':   return arr.sort((a, b) => departureToMinutes(a.departureTime) - departureToMinutes(b.departureTime));
+    case 'duration_asc':    return arr.sort((a, b) => a.durationMinutes - b.durationMinutes);
+    default:                return arr;
+  }
+}
+
+function hasActiveFilters(f: BusFilters): boolean {
+  return !!(f.busType || f.maxPrice !== undefined || f.departureSlot || (f.amenities?.length ?? 0) > 0);
+}
+
+// ---------------------------------------------------------------------------
+// Screen
+// ---------------------------------------------------------------------------
 
 const BusResultsScreen: React.FC = () => {
   const navigation = useNavigation<BusResultsNavProp>();
@@ -32,6 +90,14 @@ const BusResultsScreen: React.FC = () => {
   const params = useAtomValue(busSearchParamsAtom);
   const [results, setResults] = useAtom(busResultsAtom);
   const [loading, setLoading] = useState(true);
+
+  // Modal visibility
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
+
+  // Filter & sort state
+  const [activeFilters, setActiveFilters] = useState<BusFilters>({});
+  const [activeSort, setActiveSort] = useState<BusSortOption>('recommended');
 
   useEffect(() => {
     const load = async () => {
@@ -46,6 +112,15 @@ const BusResultsScreen: React.FC = () => {
     load();
   }, [params, setResults]);
 
+  // Filtered + sorted list
+  const trips = useMemo(
+    () => applySort(applyFilters(results, activeFilters), activeSort),
+    [results, activeFilters, activeSort],
+  );
+
+  const isFilterActive = hasActiveFilters(activeFilters);
+  const isSortActive = activeSort !== 'recommended';
+
   // Format date for subtitle
   const dateStr = params.date
     ? new Date(params.date).toLocaleDateString('en-GB', {day: 'numeric', month: 'short'})
@@ -53,8 +128,6 @@ const BusResultsScreen: React.FC = () => {
 
   const styles = StyleSheet.create({
     safeArea: {flex: 1, backgroundColor: colors.background},
-
-    /* ── Header (matches HotelResultsScreen) ── */
     header: {
       backgroundColor: colors.card,
       borderBottomWidth: 1,
@@ -78,9 +151,6 @@ const BusResultsScreen: React.FC = () => {
       color: colors.textSecondary,
       fontSize: 13,
     },
-
-
-    /* ── Controls row ── */
     controlsRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -107,14 +177,26 @@ const BusResultsScreen: React.FC = () => {
       borderColor: colors.border,
       gap: 4,
     },
+    controlBtnActive: {
+      borderColor: colors.primary,
+      backgroundColor: `${colors.primary}15`,
+    },
     controlBtnText: {
       ...typography.caption,
       fontSize: 13,
       color: colors.textPrimary,
       fontWeight: '600',
     },
+    controlBtnTextActive: {color: colors.primary},
     controlBtnIcon: {fontSize: 14, color: colors.textPrimary},
-
+    controlBtnIconActive: {fontSize: 14, color: colors.primary},
+    activeDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: colors.primary,
+      marginLeft: 2,
+    },
     list: {padding: spacing.xl},
     emptyContainer: {
       flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 80,
@@ -123,20 +205,22 @@ const BusResultsScreen: React.FC = () => {
     emptyText: {...typography.subtitle, color: colors.textSecondary},
   });
 
+  const subtitleNode = (
+    <View style={styles.subtitleRow}>
+      <Icon name="calendar-outline" style={styles.subtitleIcon} />
+      <Text style={styles.subtitleText}>{dateStr}</Text>
+      <Text style={styles.subtitleSep}>{'|'}</Text>
+      <Icon name="people-outline" style={styles.subtitleIcon} />
+      <Text style={styles.subtitleText}>{params.passengers}</Text>
+    </View>
+  );
+
   if (loading) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <ScreenHeader
           title={params.from && params.to ? `${params.from} → ${params.to}` : t('bus.results')}
-          subtitleNode={
-            <View style={styles.subtitleRow}>
-              <Icon name="calendar-outline" style={styles.subtitleIcon} />
-              <Text style={styles.subtitleText}>{dateStr}</Text>
-              <Text style={styles.subtitleSep}>|</Text>
-              <Icon name="people-outline" style={styles.subtitleIcon} />
-              <Text style={styles.subtitleText}>{params.passengers}</Text>
-            </View>
-          }
+          subtitleNode={subtitleNode}
           centered
           containerStyle={styles.header}
         />
@@ -152,53 +236,77 @@ const BusResultsScreen: React.FC = () => {
         backgroundColor={colors.card}
       />
 
-      {/* ── Header ── */}
       <ScreenHeader
         title={params.from && params.to ? `${params.from} → ${params.to}` : t('bus.results')}
-        subtitleNode={
-          <View style={styles.subtitleRow}>
-            <Icon name="calendar-outline" style={styles.subtitleIcon} />
-            <Text style={styles.subtitleText}>{dateStr}</Text>
-            <Text style={styles.subtitleSep}>|</Text>
-            <Icon name="people-outline" style={styles.subtitleIcon} />
-            <Text style={styles.subtitleText}>{params.passengers}</Text>
-          </View>
-        }
+        subtitleNode={subtitleNode}
         centered
         containerStyle={styles.header}
       />
 
-      {/* ── Trip count + Filter / Sort ── */}
+      {/* Trip count + Filter / Sort */}
       <View style={styles.controlsRow}>
         <Text style={styles.tripCountText}>
-          {t('bus.tripList')} ({results.length})
+          {t('bus.tripList')} ({trips.length})
         </Text>
         <View style={styles.controlsRight}>
-          <TouchableOpacity style={styles.controlBtn} activeOpacity={0.75}>
-            <Text style={styles.controlBtnText}>{t('common.filter')}</Text>
-            <Icon name="funnel-outline" style={styles.controlBtnIcon} />
+          {/* Filter button */}
+          <TouchableOpacity
+            style={[styles.controlBtn, isFilterActive && styles.controlBtnActive]}
+            activeOpacity={0.75}
+            onPress={() => setFilterOpen(true)}>
+            <Text style={[styles.controlBtnText, isFilterActive && styles.controlBtnTextActive]}>
+              {t('common.filter')}
+            </Text>
+            <Icon
+              name="funnel-outline"
+              style={[styles.controlBtnIcon, isFilterActive && styles.controlBtnIconActive]}
+            />
+            {isFilterActive && <View style={styles.activeDot} />}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.controlBtn} activeOpacity={0.75}>
-            <Text style={styles.controlBtnText}>{t('common.sort')}</Text>
-            <Icon name="swap-vertical-outline" style={styles.controlBtnIcon} />
+
+          {/* Sort button */}
+          <TouchableOpacity
+            style={[styles.controlBtn, isSortActive && styles.controlBtnActive]}
+            activeOpacity={0.75}
+            onPress={() => setSortOpen(true)}>
+            <Text style={[styles.controlBtnText, isSortActive && styles.controlBtnTextActive]}>
+              {t('common.sort')}
+            </Text>
+            <Icon
+              name="swap-vertical-outline"
+              style={[styles.controlBtnIcon, isSortActive && styles.controlBtnIconActive]}
+            />
+            {isSortActive && <View style={styles.activeDot} />}
           </TouchableOpacity>
         </View>
       </View>
 
       <FlatList
-        data={results}
+        data={trips}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
-        renderItem={({item}) => (
-          <BusTripCard trip={item} onPress={() => {}} />
-        )}
+        renderItem={({item}) => <BusTripCard trip={item} onPress={() => {}} />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Icon name="bus-outline" style={styles.emptyEmoji} />
             <Text style={styles.emptyText}>{t('bus.noTrips')}</Text>
           </View>
         }
+      />
+
+      {/* Bottom sheet modals */}
+      <BusFilterModal
+        visible={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        filters={activeFilters}
+        onApply={setActiveFilters}
+      />
+      <BusSortModal
+        visible={sortOpen}
+        onClose={() => setSortOpen(false)}
+        activeSort={activeSort}
+        onSelect={setActiveSort}
       />
     </SafeAreaView>
   );

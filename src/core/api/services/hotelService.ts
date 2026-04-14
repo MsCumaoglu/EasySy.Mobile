@@ -1,96 +1,151 @@
 import apiClient from '../apiClient';
+import {ENDPOINTS} from '../endpoints';
 
 // --- Requests ---
 export interface HotelSearchParams {
-  cityId: string;
-  checkIn: string; // YYYY-MM-DD format
-  checkOut: string; // YYYY-MM-DD format
+  city?: string;    // optional — backend works without it
+  checkIn: string;  // YYYY-MM-DD
+  checkOut: string; // YYYY-MM-DD
   adults: number;
-  rooms: number;
+  rooms?: number;
 }
 
-// --- Responses ---
-export interface HotelLocationResult {
-  id: string; // ID for cityId parameter
-  name: string; // e.g. "Hama"
-  country: string; // e.g. "Syria"
-  hotelCount: number; // e.g. 9
-}
+// ---------------------------------------------------------------------------
+// Real API response types (matching backend contract)
+// ---------------------------------------------------------------------------
 
-export interface PopularHotel {
+/** One hotel item returned inside `content[]` */
+export interface HotelSearchResultItem {
   id: string;
-  name: string;
-  location: string;
-  imageUrl: string;
-  pricePerNight: number;
-  rating: number; // 0-5
+  nameEn: string;          // English name
+  nameAr: string;          // Arabic name
+  nameTr?: string;         // Turkish name
+  propertyType: string;    // 'HOTEL' | 'RESORT' | 'VILLA' | 'HOSTEL' | 'APARTMENT' | 'GUESTHOUSE'
+  starRating: number;      // 1-5
+  city: string;
+  district: string;
+  avgRating: number;       // 0-5
+  totalReviews: number;
+  primaryImageUrl: string;
+  pricePerNight: number;   // in local currency (SYP)
+  status: string;
+  amenities: string[];     // e.g. ['free_wifi', 'swimming_pool', 'restaurant']
 }
 
-export interface HotelSearchResult {
-  id: string;
-  name: string;
-  stars: number;
-  location: string;
-  imageUrl: string;
-  pricePerNight: number;
-  rating: number; // 0-5
-  reviewCount: number;
-  amenities: string[]; // ["Free WiFi", "Pool"]
+/** Paginated wrapper returned by the search endpoint */
+export interface HotelSearchPageResponse {
+  content: HotelSearchResultItem[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
 }
+
+// ---------------------------------------------------------------------------
+// Legacy response types (kept for detail / popular endpoints)
+// ---------------------------------------------------------------------------
 
 export interface HotelDetailRoom {
   id: string;
   name: string;
   pricePerNight: number;
   capacity: number;
-  bedType: string; // "1 King Bed"
+  bedType: string;
   amenities: string[];
+}
+
+export interface HotelPolicyResponse {
+  id: string;
+  checkInFrom?: string;
+  checkInUntil?: string;
+  checkOutUntil?: string;
+  childrenAllowed?: boolean;
+  petsAllowed?: boolean;
+  smokingAllowed?: boolean;
+  cancellationPolicyAr?: string;
+  cancellationPolicyEn?: string;
+  cancellationPolicyTr?: string;
 }
 
 export interface HotelDetailResponse {
   id: string;
-  name: string;
-  stars: number;
-  location: string;
-  address: string;
-  description: string;
-  rating: number;
-  reviewCount: number;
-  images: string[];
-  amenities: string[];
-  rooms: HotelDetailRoom[];
+  name?: string;
+  nameEn?: string;
+  nameAr?: string;
+  nameTr?: string;
+  stars?: number;
+  starRating?: number;
+  location?: string;
+  city?: string;
+  cityEn?: string;
+  cityAr?: string;
+  cityTr?: string;
+  district?: string;
+  address?: string;
+  addressEn?: string;
+  addressAr?: string;
+  addressTr?: string;
+  description?: string;
+  descriptionEn?: string;
+  descriptionAr?: string;
+  descriptionTr?: string;
+  rating?: number;
+  avgRating?: number;
+  reviewCount?: number;
+  totalReviews?: number;
+  pricePerNight?: number;
+  propertyType?: string;
+  primaryImageUrl?: string;
+  latitude?: number;
+  longitude?: number;
+  phone?: string;
+  whatsapp?: string;
+  email?: string;
+  checkInTime?: string;
+  checkOutTime?: string;
+  images?: string[] | any[];
+  amenities?: string[] | any[];
+  rooms?: HotelDetailRoom[];
+  policy?: HotelPolicyResponse;
 }
 
 export const hotelService = {
   /**
-   * GET /hotel/locations?search={query}
-   * Fetches cities/locations for the autocomplete search input.
+   * GET /api/v1/hotels/search
+   * Returns a paginated list of hotels matching the criteria.
+   * Unwraps the `content` array from the paginated response.
    */
-  searchLocations: async (query: string): Promise<HotelLocationResult[]> => {
-    return apiClient.get('/hotel/locations', { params: { search: query } });
+  searchHotels: async (params: HotelSearchParams): Promise<HotelSearchResultItem[]> => {
+    // Clean empty string parameters to prevent 404/validation errors
+    const cleanParams: any = {};
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== '' && value !== undefined && value !== null) {
+        cleanParams[key] = value;
+      }
+    }
+
+    const response: HotelSearchPageResponse = await apiClient.get(
+      ENDPOINTS.HOTELS.SEARCH,
+      { params: cleanParams },
+    );
+    return response?.content ?? [];
   },
 
   /**
-   * GET /hotel/popular
-   * Fetches a list of highly rated or sponsored hotels to show on the main search screen.
-   */
-  getPopularHotels: async (): Promise<PopularHotel[]> => {
-    return apiClient.get('/hotel/popular');
-  },
-
-  /**
-   * POST /hotel/search
-   * Returns a list of available hotels matching the criteria.
-   */
-  searchHotels: async (params: HotelSearchParams): Promise<HotelSearchResult[]> => {
-    return apiClient.post('/hotel/search', params);
-  },
-  
-  /**
-   * GET /hotel/{hotelId}
+   * GET /api/v1/hotels/{hotelId}
    * Returns detailed information about a hotel including its rooms.
    */
   getHotelDetails: async (hotelId: string): Promise<HotelDetailResponse> => {
-    return apiClient.get(`/hotel/${hotelId}`);
-  }
+    return apiClient.get(ENDPOINTS.HOTELS.DETAIL(hotelId));
+  },
+
+  /**
+   * GET /api/v1/hotels/search/locations
+   * Returns a list of available cities and their hotel counts.
+   */
+  getLocations: async (): Promise<any[]> => {
+    return apiClient.get(ENDPOINTS.HOTELS.LOCATIONS);
+  },
 };

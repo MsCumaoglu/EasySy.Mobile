@@ -12,12 +12,110 @@
  *  5. Return the fresh data.
  */
 
-import {hotelDao, reviewDao} from '../../../core/database/hotelDao';
+import {hotelDao, reviewDao, locationDao} from '../../../core/database/hotelDao';
+import {hotelService, HotelSearchResultItem} from '../../../core/api/services/hotelService';
 import {hotelMockService} from './hotelMockService';
-import {Hotel, HotelReview} from '../models/Hotel';
+import {Hotel, HotelAmenity, HotelReview} from '../models/Hotel';
 import {HotelSearchParams} from '../types/hotelTypes';
+import i18n from '../../../localization/i18n';
 
 export const PAGE_SIZE = 10;
+
+// ---------------------------------------------------------------------------
+// Amenity key mapping: backend slug → app HotelAmenity
+// ---------------------------------------------------------------------------
+
+const AMENITY_MAP: Record<string, HotelAmenity> = {
+  free_wifi:          'wifi',
+  wifi:               'wifi',
+  restaurant:         'restaurant',
+  swimming_pool:      'pool',
+  pool:               'pool',
+  spa:                'spa',
+  gym:                'gym',
+  fitness_center:     'gym',
+  breakfast_included: 'breakfast',
+  breakfast:          'breakfast',
+  parking:            'parking',
+  valet_parking:      'parking',
+  free_parking:       'parking',
+  air_conditioning:   'ac',
+  ac:                 'ac',
+};
+
+function mapAmenities(raw: any[]): HotelAmenity[] {
+  const result: HotelAmenity[] = [];
+  for (const item of raw) {
+    let key = '';
+    if (typeof item === 'string') {
+      key = item;
+    } else if (item && typeof item === 'object') {
+      key = item.amenityKey || item.key || '';
+    }
+
+    if (key) {
+      const mapped = AMENITY_MAP[key.toLowerCase()];
+      if (mapped && !result.includes(mapped)) {
+        result.push(mapped);
+      }
+    }
+  }
+  return result;
+}
+
+function localizeHotel(hotel: Hotel): Hotel {
+  const lang = i18n.language;
+  const isAr = lang === 'ar';
+  const isTr = lang === 'tr';
+
+  return {
+    ...hotel,
+    name: isAr ? (hotel.nameAr || hotel.nameEn || hotel.name) : isTr ? (hotel.nameTr || hotel.nameEn || hotel.name) : (hotel.nameEn || hotel.nameAr || hotel.name),
+    description: isAr ? (hotel.descriptionAr || hotel.descriptionEn || hotel.description) : isTr ? (hotel.descriptionTr || hotel.descriptionEn || hotel.description) : (hotel.descriptionEn || hotel.descriptionAr || hotel.description),
+    location: isAr ? (hotel.addressAr || hotel.location) : isTr ? (hotel.addressTr || hotel.location) : (hotel.addressEn || hotel.location),
+    city: isAr ? (hotel.cityAr || hotel.city) : isTr ? (hotel.cityTr || hotel.city) : (hotel.cityEn || hotel.city),
+    policy: hotel.policy ? {
+      ...hotel.policy,
+      cancellationPolicy: isAr 
+        ? (hotel.policy.cancellationPolicyAr || hotel.policy.cancellationPolicyEn || hotel.policy.cancellationPolicy) 
+        : isTr 
+        ? (hotel.policy.cancellationPolicyTr || hotel.policy.cancellationPolicyEn || hotel.policy.cancellationPolicy)
+        : (hotel.policy.cancellationPolicyEn || hotel.policy.cancellationPolicyAr || hotel.policy.cancellationPolicy),
+    } : undefined,
+  };
+}
+
+function mapCategory(propertyType: string, stars: number): Hotel['category'] {
+  const type = propertyType.toUpperCase();
+  if (type === 'RESORT') { return 'resort'; }
+  if (type === 'HOTEL' && stars >= 4) { return 'luxury'; }
+  if (type === 'HOTEL') { return 'business'; }
+  return 'budget';
+}
+
+function mapApiHotel(item: HotelSearchResultItem): Hotel {
+  const hotel: Hotel = {
+    id:          item.id,
+    name:        item.nameEn, // Default, will be localized
+    nameEn:      item.nameEn,
+    nameAr:      item.nameAr,
+    nameTr:      item.nameTr,
+    location:    `${item.city}, ${item.district}`,
+    city:        item.city,
+    country:     'Syria',
+    rating:      item.avgRating,
+    reviewCount: item.totalReviews,
+    priceMin:    item.pricePerNight,
+    priceMax:    item.pricePerNight,
+    currency:    'SYP',
+    images:      item.primaryImageUrl ? [item.primaryImageUrl] : [],
+    amenities:   mapAmenities(item.amenities ?? []),
+    description: '',
+    coordinates: {latitude: 0, longitude: 0},
+    category:    mapCategory(item.propertyType, item.starRating),
+  };
+  return hotel;
+}
 
 // ---------------------------------------------------------------------------
 // Cache key helpers
@@ -61,15 +159,30 @@ export const hotelRepository = {
     const cacheKey = buildSearchKey(params, page);
 
     // 1. Try local cache first
-    const cached = hotelDao.getBySearchKey(cacheKey);
+    let cached: Hotel[] | null = null;
+    try {
+      cached = hotelDao.getBySearchKey(cacheKey);
+    } catch (e) {
+      console.warn('[DB Error] Failed to read from cache, falling back to API:', e);
+    }
+    
     if (cached !== null) {
-      return cached;
+      return cached.map(localizeHotel);
     }
 
     // 2. Cache miss or stale → fetch ALL from service (mock returns full list)
     //    Then paginate in-memory. When real API supports pagination, pass
     //    page+limit directly to the endpoint instead.
-    const allHotels = await hotelMockService.searchHotels(params);
+    // 2. Cache miss → fetch from real API
+    const apiItems = await hotelService.searchHotels({
+      city:     params.location || undefined,
+      checkIn:  params.checkIn  || '',
+      checkOut: params.checkOut || '',
+      adults:   params.guests   || 1,
+      rooms:    params.rooms    || 1,
+    });
+
+    const allHotels: Hotel[] = apiItems.map(mapApiHotel);
 
     // Client-side pagination (remove when server implements LIMIT/OFFSET)
     const start = (page - 1) * PAGE_SIZE;
@@ -77,10 +190,14 @@ export const hotelRepository = {
 
     // 3. Persist full hotel records + search mapping to SQLite
     if (pageData.length > 0) {
-      hotelDao.insertSearchResult(cacheKey, pageData);
+      try {
+        hotelDao.insertSearchResult(cacheKey, pageData);
+      } catch (e) {
+        console.warn('[DB Error] Failed to cache results:', e);
+      }
     }
 
-    return pageData;
+    return pageData.map(localizeHotel);
   },
 
   /**
@@ -90,16 +207,91 @@ export const hotelRepository = {
   async getHotelById(id: string): Promise<Hotel | null> {
     // 1. Try local cache
     const cached = hotelDao.getById(id);
-    if (cached) {
-      return cached;
+    
+    // We want to force fetch detail if localization fields are missing (old cache) or description is empty
+    if (cached && cached.description && cached.images.length > 0 && (cached.nameAr || cached.nameEn)) {
+      return localizeHotel(cached);
     }
 
-    // 2. Cache miss → fetch from service
-    const hotel = await hotelMockService.getHotelById(id);
-    if (hotel) {
-      hotelDao.insertHotel(hotel);
+    // 2. Cache miss → fetch from real API service
+    try {
+      const detailResponse = await hotelService.getHotelDetails(id);
+      if (detailResponse) {
+        const price = detailResponse.rooms?.[0]?.pricePerNight ?? cached?.priceMin ?? 0;
+        
+        let city = cached?.city || '';
+        const loc = detailResponse.location || detailResponse.address;
+        if (typeof loc === 'string') {
+           city = loc.split(',')[0];
+        }
+
+        let safeImages: string[] = cached?.images || [];
+        if (Array.isArray(detailResponse.images) && detailResponse.images.length > 0) {
+          safeImages = detailResponse.images.map((img: any) => {
+            if (typeof img === 'string') return img;
+            if (img && typeof img === 'object') {
+              return img.url || img.uri || img.path || img.imageUrl || '';
+            }
+            return '';
+          }).filter(Boolean);
+        }
+        if (safeImages.length === 0) {
+          safeImages = cached?.images || [];
+        }
+
+        const rawAmenities = Array.isArray(detailResponse.amenities) ? detailResponse.amenities : [];
+        const safeAmenities = rawAmenities.length > 0 
+          ? mapAmenities(rawAmenities) 
+          : (cached?.amenities || []);
+
+        const hotel: Hotel = {
+          id: detailResponse.id || id,
+          name: detailResponse.nameEn || detailResponse.name || cached?.name || 'Unknown Hotel',
+          nameEn: detailResponse.nameEn,
+          nameAr: detailResponse.nameAr,
+          nameTr: detailResponse.nameTr,
+          location: typeof loc === 'string' ? loc : (detailResponse.district ? `${detailResponse.city}, ${detailResponse.district}` : (cached?.location || 'Unknown Location')),
+          addressEn: detailResponse.addressEn,
+          addressAr: detailResponse.addressAr,
+          addressTr: detailResponse.addressTr,
+          city: detailResponse.city || 'Unknown',
+          cityEn: detailResponse.cityEn,
+          cityAr: detailResponse.cityAr,
+          cityTr: detailResponse.cityTr,
+          country: 'Syria',
+          rating: detailResponse.avgRating ?? detailResponse.rating ?? detailResponse.stars ?? detailResponse.starRating ?? cached?.rating ?? 0,
+          reviewCount: detailResponse.totalReviews ?? detailResponse.reviewCount ?? cached?.reviewCount ?? 0,
+          priceMin: price || detailResponse.pricePerNight || 0,
+          priceMax: price || detailResponse.pricePerNight || 0,
+          currency: 'SYP',
+          images: safeImages.length > 0 ? safeImages : (detailResponse.primaryImageUrl ? [detailResponse.primaryImageUrl] : []),
+          amenities: safeAmenities,
+          description: detailResponse.descriptionEn || detailResponse.description || '',
+          descriptionEn: detailResponse.descriptionEn,
+          descriptionAr: detailResponse.descriptionAr,
+          descriptionTr: detailResponse.descriptionTr,
+          coordinates: {latitude: detailResponse.latitude || 0, longitude: detailResponse.longitude || 0},
+          category: mapCategory(detailResponse.propertyType || 'HOTEL', detailResponse.starRating || detailResponse.stars || 3),
+          policy: detailResponse.policy ? {
+            checkInFrom: detailResponse.policy.checkInFrom || detailResponse.checkInTime || '14:00',
+            checkInUntil: detailResponse.policy.checkInUntil || '00:00',
+            checkOutUntil: detailResponse.policy.checkOutUntil || detailResponse.checkOutTime || '12:00',
+            childrenAllowed: !!detailResponse.policy.childrenAllowed,
+            petsAllowed: !!detailResponse.policy.petsAllowed,
+            smokingAllowed: !!detailResponse.policy.smokingAllowed,
+            cancellationPolicy: detailResponse.policy.cancellationPolicyEn || '',
+            cancellationPolicyEn: detailResponse.policy.cancellationPolicyEn,
+            cancellationPolicyAr: detailResponse.policy.cancellationPolicyAr,
+            cancellationPolicyTr: detailResponse.policy.cancellationPolicyTr,
+          } : undefined,
+        };
+        hotelDao.insertHotel(hotel);
+        return localizeHotel(hotel);
+      }
+    } catch (e) {
+      console.error('[API Error] Failed to fetch hotel details:', e);
     }
-    return hotel;
+    return cached ? localizeHotel(cached) : null;
   },
 
   /**
@@ -109,7 +301,7 @@ export const hotelRepository = {
   async getHotelReviews(hotelId: string): Promise<HotelReview[]> {
     // 1. Try local cache
     const cached = reviewDao.get(hotelId);
-    if (cached) {
+    if (cached && cached.length > 0) {
       return cached;
     }
 
@@ -127,7 +319,7 @@ export const hotelRepository = {
   async getPopularHotels(): Promise<Hotel[]> {
     const cacheKey = 'popular:page:1';
     const cached = hotelDao.getBySearchKey(cacheKey);
-    if (cached) {return cached;}
+    if (cached && cached.length > 0) {return cached;}
 
     const popular = await hotelMockService.getPopularHotels();
     if (popular.length > 0) {
@@ -142,5 +334,31 @@ export const hotelRepository = {
    */
   invalidateSearchCache(): void {
     hotelDao.invalidateSearches();
+  },
+
+  /**
+   * Fetch available locations (cities) and their hotel counts.
+   * Tries local DB first; falls back to API.
+   */
+  async fetchLocations(): Promise<any[]> {
+    try {
+      const cached = locationDao.getLocations();
+      if (cached && cached.length > 0) {
+        return cached;
+      }
+    } catch (e) {
+      console.warn('[DB Error] Failed to read locations from cache:', e);
+    }
+
+    try {
+      const locations = await hotelService.getLocations();
+      if (locations && locations.length > 0) {
+        locationDao.insertLocations(locations);
+      }
+      return locations;
+    } catch (error) {
+      console.error('[API Error] Failed to fetch locations:', error);
+      return [];
+    }
   },
 };

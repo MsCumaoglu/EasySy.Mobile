@@ -1,10 +1,11 @@
 export const ENDPOINTS = {
   HOTELS: {
-    SEARCH: '/hotels/search',
-    DETAIL: (id: string) => `/hotels/${id}`,
+    SEARCH: '/api/v1/hotels/search',
+    LOCATIONS: '/api/v1/hotels/search/locations',
+    DETAIL: (id: string) => `/api/v1/hotels/${id}`,
   },
   BUS: {
-    SEARCH: '/bus/search',
-    DETAIL: (id: string) => `/bus/${id}`,
+    SEARCH: '/api/v1/bus/search',
+    DETAIL: (id: string) => `/api/v1/bus/${id}`,
   },
 } as const;

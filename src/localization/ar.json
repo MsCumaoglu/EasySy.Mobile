@@ -9,6 +9,7 @@
     "error": "حدث خطأ ما",
     "noResults": "لا توجد نتائج",
     "bookNow": "احجز الآن",
+    "retry": "إعادة المحاولة",
     "seeAll": "رؤية الكل",
     "from": "من",
     "to": "إلى",
@@ -24,6 +25,8 @@
     "children": "أطفال",
     "rooms": "غرف",
     "apply": "تطبيق",
+    "reset": "إعادة تعيين",
+    "applyFilters": "تطبيق الفلاتر",
     "room": "غرفة",
     "adult": "بالغ",
     "child": "طفل",
@@ -33,7 +36,9 @@
     "searchResults": "نتائج البحث",
     "popularCities": "المدن الشهيرة",
     "useCurrentLocation": "استخدام الموقع الحالي",
-    "noDateSelected": "لم يتم اختيار تاريخ"
+    "noDateSelected": "لم يتم اختيار تاريخ",
+    "allowed": "مسموح",
+    "notAllowed": "غير مسموح"
   },
   "home": {
     "slogan": "سافر واستكشف",
@@ -87,7 +92,29 @@
     "checkInCheckOut": "وصول - مغادرة",
     "startDate": "تاريخ البدء",
     "endDate": "تاريخ الانتهاء",
-    "noReviews": "لا توجد مراجعات بعد."
+    "noReviews": "لا توجد مراجعات بعد.",
+    "policies": "السياسات",
+    "children": "الأطفال",
+    "pets": "الحيوانات الأليفة",
+    "smoking": "التدخين",
+    "filters": {
+      "priceRange": "نطاق السعر",
+      "minRating": "الحد الأدنى للتقييم",
+      "category": "الفئة"
+    },
+    "category": {
+      "luxury": "فاخر",
+      "business": "أعمال",
+      "resort": "منتجع",
+      "budget": "اقتصادي"
+    },
+    "sort": {
+      "recommended": "موصى به",
+      "priceAsc": "السعر: من الأقل إلى الأعلى",
+      "priceDesc": "السعر: من الأعلى إلى الأقل",
+      "ratingDesc": "الأعلى تقييماً",
+      "nameAsc": "الاسم: أ–ي"
+    }
   },
   "bus": {
     "searchTitle": "البحث عن حافلة",
@@ -110,7 +137,36 @@
     "departureCity": "مدينة المغادرة",
     "destinationCity": "مدينة الوصول",
     "passengers": "ركاب",
-    "perPerson": "للشخص"
+    "perPerson": "للشخص",
+    "filters": {
+      "busType": "نوع الحافلة",
+      "priceRange": "نطاق السعر",
+      "departureTime": "وقت المغادرة",
+      "morning": "صباحاً",
+      "afternoon": "ظهراً",
+      "evening": "مساءً",
+      "night": "ليلاً"
+    },
+    "type": {
+      "standard": "عادي",
+      "vip": "VIP",
+      "express": "سريع"
+    },
+    "amenities": {
+      "title": "المرافق",
+      "ac": "تكييف هواء",
+      "wifi": "واي فاي مجاني",
+      "usb": "شحن USB",
+      "snacks": "وجبات خفيفة",
+      "toilet": "حمام"
+    },
+    "sort": {
+      "recommended": "موصى به",
+      "priceAsc": "السعر: من الأقل إلى الأعلى",
+      "priceDesc": "السعر: من الأعلى إلى الأقل",
+      "earliestDeparture": "أبكر مغادرة",
+      "shortestDuration": "أقصر مدة"
+    }
   },
   "settings": {
     "title": "الإعدادات",

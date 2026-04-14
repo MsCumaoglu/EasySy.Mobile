@@ -34,5 +34,25 @@ export const isGuestAtom = atom(
   }
 );
 
-// Authenticated user state (will be populated by Firebase)
-export const userAtom = atom<User | null>(null);
+// Authenticated user state
+const USER_KEY = 'user_data';
+let initialUser: User | null = null;
+try {
+  initialUser = storageService.getObject<User>(USER_KEY);
+} catch (e) {
+  console.warn('[Storage Error] Failed to parse user data:', e);
+}
+
+const baseUserAtom = atom<User | null>(initialUser);
+
+export const userAtom = atom(
+  (get) => get(baseUserAtom),
+  (_get, set, newValue: User | null) => {
+    set(baseUserAtom, newValue);
+    if (newValue) {
+      storageService.setObject(USER_KEY, newValue);
+    } else {
+      storageService.remove(USER_KEY);
+    }
+  }
+);

@@ -10,6 +10,9 @@ import {
   Dimensions,
   Modal,
   FlatList,
+  Linking,
+  Alert,
+  Platform,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
@@ -85,6 +88,22 @@ const HotelDetailScreen: React.FC = () => {
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
     setLightboxVisible(true);
+  };
+
+  const handleWhatsApp = () => {
+    const phoneNumber = '+905000000000'; // Placeholder, ideally from hotel data if available
+    const message = `Hello, I'm interested in booking ${hotel?.name}.`;
+    const url = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
+
+    Linking.canOpenURL(url)
+      .then((supported) => {
+        if (supported) {
+          return Linking.openURL(url);
+        } else {
+          Alert.alert('Error', 'WhatsApp is not installed on your device');
+        }
+      })
+      .catch((err) => console.error('An error occurred', err));
   };
 
   const styles = StyleSheet.create({
@@ -348,10 +367,32 @@ const HotelDetailScreen: React.FC = () => {
       color: colors.textSecondary,
       marginTop: spacing.sm,
     },
-    mapCoords: {
-      ...typography.caption,
+    mapImage: {
+      width: '100%',
+      height: '100%',
+      borderRadius: radius.xl,
+    },
+    mapOverlay: {
+      position: 'absolute',
+      bottom: spacing.sm,
+      right: spacing.sm,
+      backgroundColor: 'rgba(255,255,255,0.9)',
+      paddingHorizontal: spacing.md,
+      paddingVertical: 6,
+      borderRadius: radius.lg,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      elevation: 2,
+    },
+    mapExpandIcon: {
+      fontSize: 14,
       color: colors.primary,
-      marginTop: 4,
+    },
+    mapExpandText: {
+      ...typography.caption,
+      color: colors.textPrimary,
+      fontWeight: '600',
     },
     reviewCard: {
       backgroundColor: colors.card,
@@ -408,6 +449,84 @@ const HotelDetailScreen: React.FC = () => {
       color: colors.primary,
     },
     bookBtn: {flex: 1, marginLeft: spacing.lg},
+    whatsappBtn: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      backgroundColor: '#25D366',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginLeft: spacing.md,
+    },
+    whatsappIcon: {
+      fontSize: 28,
+      color: '#fff',
+    },
+    policyContainer: {
+      marginTop: spacing.xl,
+    },
+    policyRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: spacing.sm,
+      gap: spacing.sm,
+    },
+    policyIcon: {
+      fontSize: 18,
+      color: colors.primary,
+    },
+    policyText: {
+      ...typography.body,
+      color: colors.textPrimary,
+      fontSize: 14,
+    },
+    policyGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      marginTop: spacing.md,
+      gap: spacing.md,
+    },
+    policyGridItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.md,
+      gap: 6,
+    },
+    policyGridIcon: {
+      fontSize: 16,
+      color: colors.primary,
+    },
+    policyDisabledIcon: {
+      color: colors.border,
+    },
+    policyGridText: {
+      ...typography.caption,
+      color: colors.textSecondary,
+      fontSize: 12,
+    },
+    cancellationBox: {
+      marginTop: spacing.lg,
+      padding: spacing.md,
+      backgroundColor: '#FFF5F5',
+      borderRadius: radius.md,
+      flexDirection: 'row',
+      gap: spacing.sm,
+      borderWidth: 1,
+      borderColor: '#FED7D7',
+    },
+    cancellationIcon: {
+      fontSize: 18,
+      color: '#E53E3E',
+    },
+    cancellationText: {
+      ...typography.caption,
+      color: '#C53030',
+      flex: 1,
+      lineHeight: 18,
+    },
   });
 
   if (hotelLoading || !hotel) {
@@ -439,14 +558,42 @@ const HotelDetailScreen: React.FC = () => {
               ))}
             </View>
             <Text style={styles.sectionTitle}>{t('hotels.mapPreview')}</Text>
-            <View style={styles.mapContainer}>
-              <Icon name="map-outline" style={styles.mapEmoji} />
-              <Text style={styles.mapLabel}>{hotel.location}</Text>
-              <Text style={styles.mapCoords}>
-                {hotel.coordinates.latitude.toFixed(4)}°N,{' '}
-                {hotel.coordinates.longitude.toFixed(4)}°E
-              </Text>
-            </View>
+            <TouchableOpacity 
+              style={styles.mapContainer} 
+              activeOpacity={0.9}
+              onPress={() => {
+                const scheme = Platform.select({ ios: 'maps:0,0?q=', android: 'geo:0,0?q=' });
+                const latLng = `${hotel.coordinates.latitude},${hotel.coordinates.longitude}`;
+                const label = hotel.name;
+                const url = Platform.select({
+                  ios: `${scheme}${label}@${latLng}`,
+                  android: `${scheme}${latLng}(${label})`
+                });
+                
+                if (url) {
+                  Linking.openURL(url);
+                }
+              }}
+            >
+              {hotel.coordinates.latitude !== 0 ? (
+                <Image 
+                  source={{ 
+                    uri: `https://static-maps.yandex.ru/1.x/?ll=${hotel.coordinates.longitude},${hotel.coordinates.latitude}&z=14&l=map&size=600,300&pt=${hotel.coordinates.longitude},${hotel.coordinates.latitude},pm2rdl` 
+                  }}
+                  style={styles.mapImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <>
+                  <Icon name="map-outline" style={styles.mapEmoji} />
+                  <Text style={styles.mapLabel}>{hotel.location}</Text>
+                </>
+              )}
+              <View style={styles.mapOverlay}>
+                <Icon name="expand-outline" style={styles.mapExpandIcon} />
+                <Text style={styles.mapExpandText}>Open in Maps</Text>
+              </View>
+            </TouchableOpacity>
           </>
         );
       case 'overview':
@@ -454,6 +601,56 @@ const HotelDetailScreen: React.FC = () => {
           <>
             <Text style={styles.sectionTitle}>{t('hotels.description')}</Text>
             <Text style={styles.descriptionText}>{hotel.description}</Text>
+
+            {hotel.policy && (
+              <View style={styles.policyContainer}>
+                <Text style={styles.sectionTitle}>{t('hotels.policies')}</Text>
+                
+                <View style={[styles.policyRow, isRTL && {flexDirection: 'row-reverse'}]}>
+                  <Icon name="time-outline" style={styles.policyIcon} />
+                  <Text style={styles.policyText}>
+                    {t('hotels.checkIn')}: {hotel.policy.checkInFrom} - {hotel.policy.checkInUntil}
+                  </Text>
+                </View>
+                <View style={[styles.policyRow, isRTL && {flexDirection: 'row-reverse'}]}>
+                  <Icon name="log-out-outline" style={styles.policyIcon} />
+                  <Text style={styles.policyText}>
+                    {t('hotels.checkOut')}: {hotel.policy.checkInUntil || hotel.policy.checkOutUntil}
+                  </Text>
+                </View>
+                
+                <View style={styles.policyGrid}>
+                   <View style={styles.policyGridItem}>
+                      <Icon name={hotel.policy.childrenAllowed ? 'happy-outline' : 'close-circle-outline'} 
+                            style={[styles.policyGridIcon, !hotel.policy.childrenAllowed && styles.policyDisabledIcon]} />
+                      <Text style={styles.policyGridText}>
+                        {t('hotels.children')} {hotel.policy.childrenAllowed ? t('common.allowed') : t('common.notAllowed')}
+                      </Text>
+                   </View>
+                   <View style={styles.policyGridItem}>
+                      <Icon name={hotel.policy.petsAllowed ? 'paw-outline' : 'close-circle-outline'} 
+                            style={[styles.policyGridIcon, !hotel.policy.petsAllowed && styles.policyDisabledIcon]} />
+                      <Text style={styles.policyGridText}>
+                        {t('hotels.pets')} {hotel.policy.petsAllowed ? t('common.allowed') : t('common.notAllowed')}
+                      </Text>
+                   </View>
+                   <View style={styles.policyGridItem}>
+                      <Icon name={hotel.policy.smokingAllowed ? 'smoking-outline' : 'close-circle-outline'} 
+                            style={[styles.policyGridIcon, !hotel.policy.smokingAllowed && styles.policyDisabledIcon]} />
+                      <Text style={styles.policyGridText}>
+                        {t('hotels.smoking')} {hotel.policy.smokingAllowed ? t('common.allowed') : t('common.notAllowed')}
+                      </Text>
+                   </View>
+                </View>
+                
+                {hotel.policy.cancellationPolicy && (
+                   <View style={styles.cancellationBox}>
+                      <Icon name="information-circle-outline" style={styles.cancellationIcon} />
+                      <Text style={styles.cancellationText}>{hotel.policy.cancellationPolicy}</Text>
+                   </View>
+                )}
+              </View>
+            )}
           </>
         );
       case 'reviews':
@@ -667,6 +864,13 @@ const HotelDetailScreen: React.FC = () => {
           onPress={() => {}}
           style={styles.bookBtn}
         />
+        <TouchableOpacity 
+          style={styles.whatsappBtn} 
+          onPress={handleWhatsApp}
+          activeOpacity={0.8}
+        >
+          <Icon name="logo-whatsapp" style={styles.whatsappIcon} />
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );

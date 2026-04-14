@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo, useState} from 'react';
 import {
   View,
   Text,
@@ -24,11 +24,56 @@ import HotelCard from '../components/HotelCard';
 import Loader from '../../../shared/components/Loader';
 import {useTranslation} from 'react-i18next';
 import {useHotelSearch} from '../hooks/useHotelSearch';
+import HotelFilterModal from '../components/HotelFilterModal';
+import HotelSortModal, {HotelSortOption} from '../components/HotelSortModal';
+import {HotelFilters} from '../types/hotelTypes';
 
 type HotelResultsNavProp = NativeStackNavigationProp<
   HotelStackParamList,
   'HotelResults'
 >;
+
+// ---------------------------------------------------------------------------
+// Helpers — client-side filter & sort (applied on top of cached pages)
+// ---------------------------------------------------------------------------
+
+function applyFilters(hotels: Hotel[], filters: HotelFilters): Hotel[] {
+  return hotels.filter(h => {
+    if (filters.minPrice !== undefined && h.priceMin < filters.minPrice) {return false;}
+    if (filters.maxPrice !== undefined && h.priceMax > filters.maxPrice) {return false;}
+    if (filters.rating !== undefined && h.rating < filters.rating) {return false;}
+    if (filters.category && h.category !== filters.category) {return false;}
+    if (filters.amenities && filters.amenities.length > 0) {
+      if (!filters.amenities.every(a => h.amenities.includes(a))) {return false;}
+    }
+    return true;
+  });
+}
+
+function applySort(hotels: Hotel[], sort: HotelSortOption): Hotel[] {
+  const arr = [...hotels];
+  switch (sort) {
+    case 'price_asc':   return arr.sort((a, b) => a.priceMin - b.priceMin);
+    case 'price_desc':  return arr.sort((a, b) => b.priceMin - a.priceMin);
+    case 'rating_desc': return arr.sort((a, b) => b.rating - a.rating);
+    case 'name_asc':    return arr.sort((a, b) => a.name.localeCompare(b.name));
+    default:            return arr; // 'recommended' — keep API order
+  }
+}
+
+function hasActiveFilters(filters: HotelFilters): boolean {
+  return !!(
+    filters.minPrice !== undefined ||
+    filters.maxPrice !== undefined ||
+    filters.rating !== undefined ||
+    filters.category ||
+    (filters.amenities && filters.amenities.length > 0)
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Screen
+// ---------------------------------------------------------------------------
 
 const HotelResultsScreen: React.FC = () => {
   const navigation = useNavigation<HotelResultsNavProp>();
@@ -38,8 +83,16 @@ const HotelResultsScreen: React.FC = () => {
   const {t} = useTranslation();
   const {flipIcon} = useRTL();
 
+  // Modal visibility
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
+
+  // Filter & sort state
+  const [activeFilters, setActiveFilters] = useState<HotelFilters>({});
+  const [activeSort, setActiveSort] = useState<HotelSortOption>('recommended');
+
   // ---------------------------------------------------------------------------
-  // Infinite query — replaces useEffect + useState
+  // Infinite query
   // ---------------------------------------------------------------------------
 
   const {
@@ -53,30 +106,30 @@ const HotelResultsScreen: React.FC = () => {
   } = useHotelSearch(params);
 
   /**
-   * Flatten all pages into a single array for FlatList.
-   * TanStack Query handles page merging automatically.
+   * Flatten → filter → sort. Memoized so it only recomputes when inputs change.
    */
-  const hotels = data?.pages.flat() ?? [];
+  const hotels = useMemo(() => {
+    const flat = data?.pages.flat() ?? [];
+    return applySort(applyFilters(flat, activeFilters), activeSort);
+  }, [data, activeFilters, activeSort]);
+
+  const isFilterActive = hasActiveFilters(activeFilters);
+  const isSortActive = activeSort !== 'recommended';
 
   // ---------------------------------------------------------------------------
   // Handlers
   // ---------------------------------------------------------------------------
 
   const handleSelectHotel = (hotel: Hotel) => {
-    // Store in Jotai so HotelDetailScreen can render instantly (initialData)
     setSelectedHotel(hotel);
     navigation.navigate('HotelDetail', {hotelId: hotel.id});
   };
 
   const handleEndReached = () => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
+    if (hasNextPage && !isFetchingNextPage) {fetchNextPage();}
   };
 
-  const handleRefresh = () => {
-    refetch();
-  };
+  const handleRefresh = () => { refetch(); };
 
   // ---------------------------------------------------------------------------
   // Date / guest subtitle
@@ -136,10 +189,7 @@ const HotelResultsScreen: React.FC = () => {
       fontWeight: '700',
       color: colors.textPrimary,
     },
-    controlsRight: {
-      flexDirection: 'row',
-      gap: spacing.md,
-    },
+    controlsRight: {flexDirection: 'row', gap: spacing.md},
     controlBtn: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -151,13 +201,26 @@ const HotelResultsScreen: React.FC = () => {
       borderColor: colors.border,
       gap: 4,
     },
+    controlBtnActive: {
+      borderColor: colors.primary,
+      backgroundColor: `${colors.primary}15`,
+    },
     controlBtnText: {
       ...typography.caption,
       fontSize: 13,
       color: colors.textPrimary,
       fontWeight: '600',
     },
+    controlBtnTextActive: {color: colors.primary},
     controlBtnIcon: {fontSize: 14, color: colors.textPrimary},
+    controlBtnIconActive: {fontSize: 14, color: colors.primary},
+    activeDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: colors.primary,
+      marginLeft: 2,
+    },
     list: {
       paddingHorizontal: spacing.xl,
       paddingTop: spacing.sm,
@@ -176,10 +239,7 @@ const HotelResultsScreen: React.FC = () => {
       color: colors.textSecondary,
       marginTop: spacing.lg,
     },
-    footerLoader: {
-      paddingVertical: spacing.xl,
-      alignItems: 'center',
-    },
+    footerLoader: {paddingVertical: spacing.xl, alignItems: 'center'},
     errorText: {
       ...typography.caption,
       color: colors.textSecondary,
@@ -212,36 +272,22 @@ const HotelResultsScreen: React.FC = () => {
   );
 
   // ---------------------------------------------------------------------------
-  // Loading state (first load only)
+  // Loading / error states
   // ---------------------------------------------------------------------------
 
   if (isLoading) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <ScreenHeader
-          title={params.location || 'Hotels'}
-          subtitleNode={subtitleNode}
-          centered
-          containerStyle={styles.header}
-        />
+        <ScreenHeader title={params.location || 'Hotels'} subtitleNode={subtitleNode} centered containerStyle={styles.header} />
         <Loader message={t('common.loading')} />
       </SafeAreaView>
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Error state
-  // ---------------------------------------------------------------------------
-
   if (isError) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <ScreenHeader
-          title={params.location || 'Hotels'}
-          subtitleNode={subtitleNode}
-          centered
-          containerStyle={styles.header}
-        />
+        <ScreenHeader title={params.location || 'Hotels'} subtitleNode={subtitleNode} centered containerStyle={styles.header} />
         <View style={styles.emptyContainer}>
           <Icon name="cloud-offline-outline" style={styles.emptyIcon} />
           <Text style={styles.errorText}>{t('common.error')}</Text>
@@ -264,7 +310,6 @@ const HotelResultsScreen: React.FC = () => {
         backgroundColor={colors.card}
       />
 
-      {/* Header */}
       <ScreenHeader
         title={params.location || 'Hotels'}
         subtitleNode={subtitleNode}
@@ -278,13 +323,34 @@ const HotelResultsScreen: React.FC = () => {
           {t('hotels.hotelList')} ({hotels.length})
         </Text>
         <View style={styles.controlsRight}>
-          <TouchableOpacity style={styles.controlBtn} activeOpacity={0.75}>
-            <Text style={styles.controlBtnText}>{t('common.filter')}</Text>
-            <Icon name="funnel-outline" style={styles.controlBtnIcon} />
+          {/* Filter button */}
+          <TouchableOpacity
+            style={[styles.controlBtn, isFilterActive && styles.controlBtnActive]}
+            activeOpacity={0.75}
+            onPress={() => setFilterOpen(true)}>
+            <Text style={[styles.controlBtnText, isFilterActive && styles.controlBtnTextActive]}>
+              {t('common.filter')}
+            </Text>
+            <Icon
+              name="funnel-outline"
+              style={[styles.controlBtnIcon, isFilterActive && styles.controlBtnIconActive]}
+            />
+            {isFilterActive && <View style={styles.activeDot} />}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.controlBtn} activeOpacity={0.75}>
-            <Text style={styles.controlBtnText}>{t('common.sort')}</Text>
-            <Icon name="swap-vertical-outline" style={styles.controlBtnIcon} />
+
+          {/* Sort button */}
+          <TouchableOpacity
+            style={[styles.controlBtn, isSortActive && styles.controlBtnActive]}
+            activeOpacity={0.75}
+            onPress={() => setSortOpen(true)}>
+            <Text style={[styles.controlBtnText, isSortActive && styles.controlBtnTextActive]}>
+              {t('common.sort')}
+            </Text>
+            <Icon
+              name="swap-vertical-outline"
+              style={[styles.controlBtnIcon, isSortActive && styles.controlBtnIconActive]}
+            />
+            {isSortActive && <View style={styles.activeDot} />}
           </TouchableOpacity>
         </View>
       </View>
@@ -298,13 +364,10 @@ const HotelResultsScreen: React.FC = () => {
         renderItem={({item}) => (
           <HotelCard hotel={item} onPress={() => handleSelectHotel(item)} />
         )}
-        // Lazy loading: load next page when user is 50% from the bottom
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
-        // Pull-to-refresh: invalidates SQLite cache and re-fetches from API
         onRefresh={handleRefresh}
         refreshing={isLoading}
-        // Footer: show spinner while next page is loading
         ListFooterComponent={
           isFetchingNextPage ? (
             <View style={styles.footerLoader}>
@@ -318,6 +381,20 @@ const HotelResultsScreen: React.FC = () => {
             <Text style={styles.emptyText}>{t('hotels.noHotels')}</Text>
           </View>
         }
+      />
+
+      {/* Bottom sheet modals */}
+      <HotelFilterModal
+        visible={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        filters={activeFilters}
+        onApply={setActiveFilters}
+      />
+      <HotelSortModal
+        visible={sortOpen}
+        onClose={() => setSortOpen(false)}
+        activeSort={activeSort}
+        onSelect={setActiveSort}
       />
     </SafeAreaView>
   );
