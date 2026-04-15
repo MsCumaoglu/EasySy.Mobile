@@ -4,6 +4,7 @@ export type HotelStackParamList = {
   SearchHotels: undefined;
   HotelResults: undefined;
   HotelDetail: {hotelId: string};
+  HotelRooms: {hotelId: string; hotelName: string};
 };
 
 export type BusStackParamList = {

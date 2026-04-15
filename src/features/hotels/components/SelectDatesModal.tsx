@@ -362,7 +362,6 @@ const SelectDatesModal: React.FC<SelectDatesModalProps> = ({
                     <PrimaryButton
                         label="Confirm Dates"
                         onPress={() => onConfirm(tempStart, tempEnd)}
-                        disabled={!tempStart || !tempEnd}
                     />
                 </View>
             </View>

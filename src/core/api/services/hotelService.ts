@@ -1,5 +1,6 @@
 import apiClient from '../apiClient';
 import {ENDPOINTS} from '../endpoints';
+import {RoomApiResponse} from '../../../features/hotels/models/Room';
 
 // --- Requests ---
 export interface HotelSearchParams {
@@ -147,5 +148,13 @@ export const hotelService = {
    */
   getLocations: async (): Promise<any[]> => {
     return apiClient.get(ENDPOINTS.HOTELS.LOCATIONS);
+  },
+
+  /**
+   * GET /api/v1/hotels/{hotelId}/rooms
+   * Returns the list of rooms for a specific hotel.
+   */
+  getRooms: async (hotelId: string): Promise<RoomApiResponse[]> => {
+    return apiClient.get(ENDPOINTS.HOTELS.ROOMS(hotelId));
   },
 };

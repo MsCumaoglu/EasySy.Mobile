@@ -4,6 +4,7 @@ import {HotelStackParamList} from './types';
 import SearchHotelsScreen from '../../features/hotels/screens/SearchHotelsScreen';
 import HotelResultsScreen from '../../features/hotels/screens/HotelResultsScreen';
 import HotelDetailScreen from '../../features/hotels/screens/HotelDetailScreen';
+import HotelRoomsScreen from '../../features/hotels/screens/HotelRoomsScreen';
 
 const Stack = createNativeStackNavigator<HotelStackParamList>();
 
@@ -13,6 +14,7 @@ const HotelNavigator: React.FC = () => {
       <Stack.Screen name="SearchHotels" component={SearchHotelsScreen} />
       <Stack.Screen name="HotelResults" component={HotelResultsScreen} />
       <Stack.Screen name="HotelDetail" component={HotelDetailScreen} />
+      <Stack.Screen name="HotelRooms" component={HotelRoomsScreen} />
     </Stack.Navigator>
   );
 };

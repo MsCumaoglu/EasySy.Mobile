@@ -439,16 +439,7 @@ const HotelDetailScreen: React.FC = () => {
       alignItems: 'center',
       justifyContent: 'space-between',
     },
-    footerPrice: {},
-    footerPriceLabel: {
-      ...typography.caption,
-      color: colors.textSecondary,
-    },
-    footerPriceValue: {
-      ...typography.title,
-      color: colors.primary,
-    },
-    bookBtn: {flex: 1, marginLeft: spacing.lg},
+    bookBtn: {flex: 1},
     whatsappBtn: {
       width: 50,
       height: 50,
@@ -853,16 +844,11 @@ const HotelDetailScreen: React.FC = () => {
 
       {/* Footer */}
       <View style={styles.footer}>
-        <View style={styles.footerPrice}>
-          <Text style={styles.footerPriceLabel}>{t('common.perNight')}</Text>
-          <Text style={styles.footerPriceValue}>
-            {formatCurrency(hotel.priceMin)}
-          </Text>
-        </View>
         <PrimaryButton
-          label={t('common.bookNow')}
-          onPress={() => {}}
+          label={t('common.rooms')}
+          onPress={() => navigation.navigate('HotelRooms', {hotelId: hotel.id, hotelName: hotel.name})}
           style={styles.bookBtn}
+          variant="filled"
         />
         <TouchableOpacity 
           style={styles.whatsappBtn} 
