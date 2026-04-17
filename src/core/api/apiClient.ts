@@ -1,5 +1,6 @@
 import axios, {InternalAxiosRequestConfig} from 'axios';
 import {API_CONFIG} from './apiConfig';
+import i18n from '../../localization/i18n';
 
 const apiClient = axios.create({
   timeout: API_CONFIG.TIMEOUT,
@@ -10,6 +11,12 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    /**
+     * LANGUAGE HEADER
+     * Sends the user's selected language so the backend returns localized data.
+     */
+    config.headers['Accept-Language'] = i18n.language;
+
     /**
      * ENVIRONMENT ROUTING
      * In DEV: bypass the gateway, send request to specific microservice ports.

@@ -96,10 +96,7 @@ function mapCategory(propertyType: string, stars: number): Hotel['category'] {
 function mapApiHotel(item: HotelSearchResultItem): Hotel {
   const hotel: Hotel = {
     id:          item.id,
-    name:        item.nameEn, // Default, will be localized
-    nameEn:      item.nameEn,
-    nameAr:      item.nameAr,
-    nameTr:      item.nameTr,
+    name:        item.name,  // Already localized by backend via Accept-Language
     location:    `${item.city}, ${item.district}`,
     city:        item.city,
     country:     'Syria',
@@ -208,85 +205,66 @@ export const hotelRepository = {
     // 1. Try local cache
     const cached = hotelDao.getById(id);
     
-    // We want to force fetch detail if localization fields are missing (old cache) or description is empty
-    if (cached && cached.description && cached.images.length > 0 && (cached.nameAr || cached.nameEn)) {
+    // Use cache only if it has full detail data (description + images)
+    if (cached && cached.description && cached.images.length > 0) {
       return localizeHotel(cached);
     }
 
     // 2. Cache miss → fetch from real API service
     try {
-      const detailResponse = await hotelService.getHotelDetails(id);
-      if (detailResponse) {
-        const price = detailResponse.rooms?.[0]?.pricePerNight ?? cached?.priceMin ?? 0;
-        
-        let city = cached?.city || '';
-        const loc = detailResponse.location || detailResponse.address;
-        if (typeof loc === 'string') {
-           city = loc.split(',')[0];
-        }
+      const d = await hotelService.getHotelDetails(id);
+      if (d) {
+        // Extract image URLs, sorted by sortOrder
+        const sortedImages = [...(d.images || [])]
+          .sort((a, b) => a.sortOrder - b.sortOrder);
+        const imageUrls = sortedImages
+          .map(img => img.url)
+          .filter(Boolean);
 
-        let safeImages: string[] = cached?.images || [];
-        if (Array.isArray(detailResponse.images) && detailResponse.images.length > 0) {
-          safeImages = detailResponse.images.map((img: any) => {
-            if (typeof img === 'string') return img;
-            if (img && typeof img === 'object') {
-              return img.url || img.uri || img.path || img.imageUrl || '';
-            }
-            return '';
-          }).filter(Boolean);
-        }
-        if (safeImages.length === 0) {
-          safeImages = cached?.images || [];
-        }
+        // Find primary image as fallback
+        const primaryImg = sortedImages.find(img => img.isPrimary);
 
-        const rawAmenities = Array.isArray(detailResponse.amenities) ? detailResponse.amenities : [];
-        const safeAmenities = rawAmenities.length > 0 
-          ? mapAmenities(rawAmenities) 
-          : (cached?.amenities || []);
+        // Map amenity objects → app amenity keys
+        const safeAmenities = mapAmenities(d.amenities || []);
+
+        // Build location string
+        const location = d.district
+          ? `${d.city}, ${d.district}`
+          : d.address || d.city || cached?.location || 'Unknown';
 
         const hotel: Hotel = {
-          id: detailResponse.id || id,
-          name: detailResponse.nameEn || detailResponse.name || cached?.name || 'Unknown Hotel',
-          nameEn: detailResponse.nameEn,
-          nameAr: detailResponse.nameAr,
-          nameTr: detailResponse.nameTr,
-          location: typeof loc === 'string' ? loc : (detailResponse.district ? `${detailResponse.city}, ${detailResponse.district}` : (cached?.location || 'Unknown Location')),
-          addressEn: detailResponse.addressEn,
-          addressAr: detailResponse.addressAr,
-          addressTr: detailResponse.addressTr,
-          city: detailResponse.city || 'Unknown',
-          cityEn: detailResponse.cityEn,
-          cityAr: detailResponse.cityAr,
-          cityTr: detailResponse.cityTr,
+          id: d.id || id,
+          name: d.name || cached?.name || 'Unknown Hotel',
+          location,
+          city: d.city || cached?.city || 'Unknown',
           country: 'Syria',
-          rating: detailResponse.avgRating ?? detailResponse.rating ?? detailResponse.stars ?? detailResponse.starRating ?? cached?.rating ?? 0,
-          reviewCount: detailResponse.totalReviews ?? detailResponse.reviewCount ?? cached?.reviewCount ?? 0,
-          priceMin: price || detailResponse.pricePerNight || 0,
-          priceMax: price || detailResponse.pricePerNight || 0,
+          rating: d.avgRating ?? cached?.rating ?? 0,
+          reviewCount: d.totalReviews ?? cached?.reviewCount ?? 0,
+          priceMin: cached?.priceMin ?? 0,
+          priceMax: cached?.priceMax ?? 0,
           currency: 'SYP',
-          images: safeImages.length > 0 ? safeImages : (detailResponse.primaryImageUrl ? [detailResponse.primaryImageUrl] : []),
-          amenities: safeAmenities,
-          description: detailResponse.descriptionEn || detailResponse.description || '',
-          descriptionEn: detailResponse.descriptionEn,
-          descriptionAr: detailResponse.descriptionAr,
-          descriptionTr: detailResponse.descriptionTr,
-          coordinates: {latitude: detailResponse.latitude || 0, longitude: detailResponse.longitude || 0},
-          category: mapCategory(detailResponse.propertyType || 'HOTEL', detailResponse.starRating || detailResponse.stars || 3),
-          policy: detailResponse.policy ? {
-            checkInFrom: detailResponse.policy.checkInFrom || detailResponse.checkInTime || '14:00',
-            checkInUntil: detailResponse.policy.checkInUntil || '00:00',
-            checkOutUntil: detailResponse.policy.checkOutUntil || detailResponse.checkOutTime || '12:00',
-            childrenAllowed: !!detailResponse.policy.childrenAllowed,
-            petsAllowed: !!detailResponse.policy.petsAllowed,
-            smokingAllowed: !!detailResponse.policy.smokingAllowed,
-            cancellationPolicy: detailResponse.policy.cancellationPolicyEn || '',
-            cancellationPolicyEn: detailResponse.policy.cancellationPolicyEn,
-            cancellationPolicyAr: detailResponse.policy.cancellationPolicyAr,
-            cancellationPolicyTr: detailResponse.policy.cancellationPolicyTr,
+          images: imageUrls.length > 0
+            ? imageUrls
+            : (primaryImg ? [primaryImg.url] : (cached?.images || [])),
+          amenities: safeAmenities.length > 0 ? safeAmenities : (cached?.amenities || []),
+          description: d.description || cached?.description || '',
+          coordinates: {
+            latitude: d.latitude || 0,
+            longitude: d.longitude || 0,
+          },
+          category: mapCategory(d.propertyType || 'HOTEL', d.starRating || 3),
+          policy: d.policy ? {
+            checkInFrom: d.policy.checkInFrom || d.checkInTime || '14:00',
+            checkInUntil: d.policy.checkInUntil || '00:00',
+            checkOutUntil: d.policy.checkOutUntil || d.checkOutTime || '12:00',
+            childrenAllowed: !!d.policy.childrenAllowed,
+            petsAllowed: !!d.policy.petsAllowed,
+            smokingAllowed: !!d.policy.smokingAllowed,
+            cancellationPolicy: d.policy.cancellationPolicy || '',
           } : undefined,
         };
         hotelDao.insertHotel(hotel);
-        return localizeHotel(hotel);
+        return hotel; // Already localized by backend via Accept-Language
       }
     } catch (e) {
       console.error('[API Error] Failed to fetch hotel details:', e);

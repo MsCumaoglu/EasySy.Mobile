@@ -39,19 +39,9 @@ export default function HotelRoomsScreen() {
 
   const [isDatesModalVisible, setDatesModalVisible] = useState(false);
   const [isGuestsModalVisible, setGuestsModalVisible] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
-
   // Parse dates for display
   const checkInDisplay = searchParams.checkIn ? searchParams.checkIn : t('hotels.checkIn');
   const checkOutDisplay = searchParams.checkOut ? searchParams.checkOut : t('hotels.checkOut');
-  
-  const handleUpdateFilter = () => {
-    // Simulate updating filter locally
-    setIsUpdating(true);
-    setTimeout(() => {
-      setIsUpdating(false);
-    }, 400);
-  };
 
   const renderRoom = ({item}: {item: Room}) => {
     // Calculate required capacity per room
@@ -161,38 +151,37 @@ export default function HotelRoomsScreen() {
       fontWeight: '700',
       flex: 1,
     },
-    filterCompactCard: {
+    pillCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
       marginHorizontal: spacing.lg,
       marginTop: spacing.md,
-      padding: spacing.md,
+      paddingVertical: 6,
+      paddingHorizontal: 6,
       backgroundColor: colors.surface,
-      borderRadius: radius.lg,
+      borderRadius: 50,
       borderWidth: 1,
       borderColor: colors.border,
     },
-    filterCompactRow: {
+    pillItem: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: 8,
-    },
-    filterDivider: {
-      height: 1,
-      backgroundColor: colors.border,
-      marginVertical: 4,
-    },
-    filterCompactIcon: {
-      fontSize: 20,
-      color: colors.primary,
-      width: 32,
-    },
-    filterCompactText: {
-      ...typography.body,
-      color: colors.textSecondary,
       flex: 1,
+      gap: 6,
+      paddingHorizontal: 6,
     },
-    updateCompactBtn: {
-      marginTop: spacing.md,
+    pillIcon: {
+      fontSize: 22,
+      color: colors.primary,
     },
+    pillText: {
+      ...typography.caption,
+      fontSize: 12,
+      color: colors.textSecondary,
+      flexShrink: 1,
+    },
+
     sectionTitle: {
       ...typography.title,
       fontSize: 18,
@@ -324,30 +313,23 @@ export default function HotelRoomsScreen() {
         </Text>
       </View>
 
-      {/* Compact Filter Card */}
-      <View style={styles.filterCompactCard}>
-        <TouchableOpacity style={styles.filterCompactRow} onPress={() => setDatesModalVisible(true)}>
-          <Icon name="calendar-outline" style={styles.filterCompactIcon} />
-          <Text style={styles.filterCompactText}>{checkInDisplay} - {checkOutDisplay}</Text>
-        </TouchableOpacity>
-        <View style={styles.filterDivider} />
-        <TouchableOpacity style={styles.filterCompactRow} onPress={() => setGuestsModalVisible(true)}>
-          <Icon name="person-outline" style={styles.filterCompactIcon} />
-          <Text style={styles.filterCompactText}>{searchParams.guests} {t('common.adults') || 'Adults'} & {searchParams.children} {t('common.children') || 'Children'}</Text>
+      {/* Pill Filter Card */}
+      <View style={styles.pillCard}>
+        <TouchableOpacity style={styles.pillItem} onPress={() => setDatesModalVisible(true)}>
+          <Icon name="calendar-outline" style={styles.pillIcon} />
+          <Text style={styles.pillText} numberOfLines={1}>{checkInDisplay} - {checkOutDisplay}</Text>
         </TouchableOpacity>
         
-        <PrimaryButton 
-          label={t('hotels.updateFilter') || 'Update Filter'} 
-          onPress={handleUpdateFilter} 
-          style={styles.updateCompactBtn}
-          variant="filled"
-        />
+        <TouchableOpacity style={styles.pillItem} onPress={() => setGuestsModalVisible(true)}>
+          <Icon name="person-outline" style={styles.pillIcon} />
+          <Text style={styles.pillText} numberOfLines={1}>{searchParams.guests} {t('common.adults') || 'Adults'} & {searchParams.children} {t('common.children') || 'Children'}</Text>
+        </TouchableOpacity>
       </View>
 
       <Text style={styles.sectionTitle}>{t('hotels.roomsList') || 'Available Rooms'}</Text>
 
       {/* Room List */}
-      {isLoading || isFetching || isUpdating ? (
+      {isLoading || isFetching ? (
         <Loader />
       ) : (
         <FlatList

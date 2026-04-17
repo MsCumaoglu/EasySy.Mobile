@@ -18,9 +18,7 @@ export interface HotelSearchParams {
 /** One hotel item returned inside `content[]` */
 export interface HotelSearchResultItem {
   id: string;
-  nameEn: string;          // English name
-  nameAr: string;          // Arabic name
-  nameTr?: string;         // Turkish name
+  name: string;            // Localized name (Accept-Language driven)
   propertyType: string;    // 'HOTEL' | 'RESORT' | 'VILLA' | 'HOSTEL' | 'APARTMENT' | 'GUESTHOUSE'
   starRating: number;      // 1-5
   city: string;
@@ -29,7 +27,7 @@ export interface HotelSearchResultItem {
   totalReviews: number;
   primaryImageUrl: string;
   pricePerNight: number;   // in local currency (SYP)
-  status: string;
+  status: string;          // 'DRAFT' | 'ACTIVE' | ...
   amenities: string[];     // e.g. ['free_wifi', 'swimming_pool', 'restaurant']
 }
 
@@ -45,16 +43,27 @@ export interface HotelSearchPageResponse {
 }
 
 // ---------------------------------------------------------------------------
-// Legacy response types (kept for detail / popular endpoints)
+// Detail endpoint response types (matching /api/v1/hotels/{id} contract)
 // ---------------------------------------------------------------------------
 
-export interface HotelDetailRoom {
+/** Reusable translations map: { [lang]: { [field]: value } } */
+export type TranslationsMap = Record<string, Record<string, string>>;
+
+export interface HotelAmenityResponse {
   id: string;
-  name: string;
-  pricePerNight: number;
-  capacity: number;
-  bedType: string;
-  amenities: string[];
+  amenityKey: string;       // e.g. 'free_wifi', 'swimming_pool'
+  category: string;         // 'GENERAL' | 'ROOM' | ...
+  isFree: boolean;
+}
+
+export interface HotelImageResponse {
+  id: string;
+  url: string;
+  category: string;         // 'EXTERIOR' | 'ROOM' | 'LOBBY' | ...
+  caption: string;
+  translations?: TranslationsMap;
+  sortOrder: number;
+  isPrimary: boolean;
 }
 
 export interface HotelPolicyResponse {
@@ -65,51 +74,37 @@ export interface HotelPolicyResponse {
   childrenAllowed?: boolean;
   petsAllowed?: boolean;
   smokingAllowed?: boolean;
-  cancellationPolicyAr?: string;
-  cancellationPolicyEn?: string;
-  cancellationPolicyTr?: string;
+  cancellationPolicy?: string;   // Localized via Accept-Language
+  translations?: TranslationsMap;
 }
 
 export interface HotelDetailResponse {
   id: string;
-  name?: string;
-  nameEn?: string;
-  nameAr?: string;
-  nameTr?: string;
-  stars?: number;
-  starRating?: number;
-  location?: string;
-  city?: string;
-  cityEn?: string;
-  cityAr?: string;
-  cityTr?: string;
-  district?: string;
-  address?: string;
-  addressEn?: string;
-  addressAr?: string;
-  addressTr?: string;
-  description?: string;
-  descriptionEn?: string;
-  descriptionAr?: string;
-  descriptionTr?: string;
-  rating?: number;
-  avgRating?: number;
-  reviewCount?: number;
-  totalReviews?: number;
-  pricePerNight?: number;
-  propertyType?: string;
-  primaryImageUrl?: string;
-  latitude?: number;
-  longitude?: number;
+  ownerUserId?: string;
+  name: string;                  // Localized via Accept-Language
+  description: string;           // Localized via Accept-Language
+  address: string;               // Localized via Accept-Language
+  translations?: TranslationsMap;
+  propertyType: string;
+  starRating: number;
+  city: string;
+  district: string;
+  latitude: number;
+  longitude: number;
   phone?: string;
   whatsapp?: string;
   email?: string;
   checkInTime?: string;
   checkOutTime?: string;
-  images?: string[] | any[];
-  amenities?: string[] | any[];
-  rooms?: HotelDetailRoom[];
+  status: string;
+  isFeatured?: boolean;
+  avgRating: number;
+  totalReviews: number;
+  amenities: HotelAmenityResponse[];
+  images: HotelImageResponse[];
   policy?: HotelPolicyResponse;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export const hotelService = {
