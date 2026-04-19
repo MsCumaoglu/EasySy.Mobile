@@ -13,6 +13,7 @@ import {
   Linking,
   Alert,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
@@ -24,15 +25,13 @@ import {useTheme} from '../../../app/providers/ThemeProvider';
 import {selectedHotelAtom} from '../state/hotelAtoms';
 import {useHotelDetail} from '../hooks/useHotelDetail';
 import {useFavorites} from '../hooks/useFavorites';
-import {hotelRepository} from '../services/hotelRepository';
-import {HotelReview} from '../models/Hotel';
+import {useHotelReviews} from '../hooks/useHotelReviews';
 import {HotelTab} from '../types/hotelTypes';
 import {formatCurrency} from '../../../core/utils/format';
 import {useRTL} from '../../../core/hooks/useRTL';
 import PrimaryButton from '../../../shared/components/PrimaryButton';
 import Loader from '../../../shared/components/Loader';
 import Icon from 'react-native-vector-icons/Ionicons';
-import {useQuery} from '@tanstack/react-query';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
 const THUMB_SIZE = (SCREEN_WIDTH - 40 - 5) / 3; // 16px side padding x2 + 2 gaps x4
@@ -68,18 +67,22 @@ const HotelDetailScreen: React.FC = () => {
     selectedHotel,
   );
 
-  // Cache-first reviews
-  const {data: reviews = []} = useQuery<HotelReview[]>({
-    queryKey: ['hotels', 'reviews', hotelId],
-    queryFn: () => hotelRepository.getHotelReviews(hotelId),
-    staleTime: 30 * 60 * 1000,
-    enabled: !!hotelId,
-  });
+  const [activeTab, setActiveTab] = useState<HotelTab>('detail');
+
+  // Paginated reviews from the real API — fetch ONLY when reviews tab is active
+  const {
+    data: reviewsData,
+    fetchNextPage: fetchNextReviews,
+    hasNextPage: hasMoreReviews,
+    isFetchingNextPage: isFetchingReviews,
+    isLoading: isReviewsLoading,
+  } = useHotelReviews(hotelId, activeTab === 'reviews');
+
+  const reviews = reviewsData?.pages.flatMap(p => p.reviews) ?? [];
 
   // Offline-persistent favorites via SQLite
   const {isFavorite, toggle: toggleFavorite} = useFavorites(hotelId);
 
-  const [activeTab, setActiveTab] = useState<HotelTab>('detail');
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [lightboxVisible, setLightboxVisible] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
@@ -648,26 +651,46 @@ const HotelDetailScreen: React.FC = () => {
         return (
           <>
             <Text style={styles.sectionTitle}>
-              {t('hotels.reviews')} ({reviews.length})
+              {t('hotels.reviews')} {reviews.length > 0 && `(${reviews.length})`}
             </Text>
-            {reviews.length === 0 && (
+            {isReviewsLoading ? (
+              <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xl }} />
+            ) : reviews.length === 0 ? (
               <Text style={styles.descriptionText}>{t('hotels.noReviews')}</Text>
-            )}
-            {reviews.map(review => (
-              <View key={review.id} style={styles.reviewCard}>
-                <View style={styles.reviewHeader}>
-                  <Text style={styles.reviewAuthor}>{review.authorName}</Text>
+            ) : (
+              reviews.map(review => (
+                <View key={review.id} style={styles.reviewCard}>
+                  <View style={styles.reviewHeader}>
+                    <Text style={styles.reviewAuthor}>{review.authorName}</Text>
                   <View style={styles.reviewRating}>
                     <Icon name="star" style={styles.reviewRatingIcon} />
                     <Text style={styles.reviewRatingText}>
-                      {review.rating.toFixed(1)}
+                      {review.overallRating.toFixed(1)}
                     </Text>
                   </View>
                 </View>
-                <Text style={styles.reviewComment}>{review.comment}</Text>
+                <Text style={styles.reviewComment}>{review.content}</Text>
                 <Text style={styles.reviewDate}>{review.date}</Text>
               </View>
-            ))}
+              ))
+            )}
+            {/* Load more reviews */}
+            {hasMoreReviews && (
+              <TouchableOpacity
+                onPress={() => fetchNextReviews()}
+                disabled={isFetchingReviews}
+                style={{
+                  alignItems: 'center',
+                  paddingVertical: spacing.lg,
+                }}>
+                {isFetchingReviews
+                  ? <ActivityIndicator color={colors.primary} />
+                  : <Text style={{...typography.body, color: colors.primary, fontWeight: '600'}}>
+                      {t('common.loadMore')}
+                    </Text>
+                }
+              </TouchableOpacity>
+            )}
           </>
         );
     }

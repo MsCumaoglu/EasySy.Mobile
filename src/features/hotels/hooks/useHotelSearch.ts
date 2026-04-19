@@ -1,59 +1,61 @@
 /**
  * useHotelSearch — Infinite Query Hook
  *
- * Provides paginated hotel search results with automatic caching.
- * Uses TanStack Query's useInfiniteQuery to manage:
- *   - Loading / error states
- *   - Page tracking and merging
- *   - Automatic deduplication (same params = same cache entry)
+ * Provides API-driven paginated hotel search results.
+ * Passes filters and sort options directly to the API — no client-side processing.
+ *
+ * Changing `filters` or `sortBy` triggers a new query (TanStack de-duplication
+ * ensures no redundant requests for the same combination).
  *
  * Usage:
- *   const { data, fetchNextPage, hasNextPage, isLoading } = useHotelSearch(params);
- *   const hotels = data?.pages.flat() ?? [];
+ *   const { data, fetchNextPage, hasNextPage, isLoading } = useHotelSearch(params, filters, sortBy);
+ *   const hotels = data?.pages.flatMap(p => p.hotels) ?? [];
  */
 
 import {useInfiniteQuery} from '@tanstack/react-query';
 import {hotelRepository, PAGE_SIZE} from '../services/hotelRepository';
-import {HotelSearchParams} from '../types/hotelTypes';
-import {useTranslation} from 'react-i18next';
+import {HotelSearchParams, HotelFilters, HotelSortOption} from '../types/hotelTypes';
 
-export function useHotelSearch(params: Partial<HotelSearchParams>) {
-  const { i18n } = useTranslation();
-
+export function useHotelSearch(
+  params: Partial<HotelSearchParams>,
+  filters: HotelFilters = {},
+  sortBy: HotelSortOption = 'recommended',
+) {
   return useInfiniteQuery({
     /**
-     * queryKey — TanStack Query uses this to deduplicate and cache.
-     * If params don't change, the cached result is returned instantly.
+     * queryKey — TanStack uses this to deduplicate and cache.
+     * Any change to params, filters, or sortBy triggers a fresh fetch.
      */
-    queryKey: ['hotels', 'search', params, i18n.language] as const,
+    queryKey: ['hotels', 'search', params, filters, sortBy] as const,
 
     /**
-     * queryFn — Called when data is needed.
-     * pageParam starts at 1 and increments on each fetchNextPage() call.
+     * queryFn — Delegates entirely to the repository, which decides
+     * whether to hit the API or fall back to SQLite.
      */
     queryFn: ({pageParam}) =>
-      hotelRepository.searchHotels(params, pageParam as number),
+      hotelRepository.searchHotels(
+        params,
+        pageParam as number,
+        filters,
+        sortBy,
+      ),
 
-    /**
-     * initialPageParam — The first page to load.
-     */
     initialPageParam: 1,
 
     /**
-     * getNextPageParam — Determines whether there is a next page.
-     * If the last page returned fewer items than PAGE_SIZE, we've reached the end.
+     * getNextPageParam — Uses the backend's `isLast` flag to determine
+     * whether there are more pages. This replaces the old length-based check
+     * which caused results to stop at PAGE_SIZE items.
      */
     getNextPageParam: (lastPage, allPages) => {
-      if (lastPage.length < PAGE_SIZE) {
+      if (lastPage.isLast) {
         return undefined; // No more pages
       }
       return allPages.length + 1;
     },
 
-    /**
-     * enabled — Ensure we don't block queries without dates,
-     * so location-only searches can also work.
-     */
     enabled: true,
   });
 }
+
+export {PAGE_SIZE};

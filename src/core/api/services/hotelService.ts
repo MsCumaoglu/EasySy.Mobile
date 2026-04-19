@@ -2,13 +2,30 @@ import apiClient from '../apiClient';
 import {ENDPOINTS} from '../endpoints';
 import {RoomApiResponse} from '../../../features/hotels/models/Room';
 
-// --- Requests ---
+// --- Search Request Params (matches /api/v1/hotels/search exactly) ---
 export interface HotelSearchParams {
-  city?: string;    // optional — backend works without it
-  checkIn: string;  // YYYY-MM-DD
-  checkOut: string; // YYYY-MM-DD
-  adults: number;
-  rooms?: number;
+  city?: string;            // optional city filter
+  district?: string;        // optional district filter
+  searchQuery?: string;     // free-text search
+  checkIn?: string;         // YYYY-MM-DD (optional per swagger)
+  checkOut?: string;        // YYYY-MM-DD (optional per swagger)
+  adults?: number;
+  children?: number;
+  page?: number;            // 0-indexed
+  size?: number;            // default 20
+  // Filters
+  minPrice?: number;
+  maxPrice?: number;
+  minGuestRating?: number;  // 0-5 — was wrongly 'minRating' before
+  minStarRating?: number;   // 1-5
+  amenities?: string[];     // e.g. ['free_wifi', 'swimming_pool']
+  propertyType?: string;    // HOTEL | APARTMENT | GUESTHOUSE | HOSTEL | VILLA | RESORT
+  roomTypes?: string[];     // SINGLE | DOUBLE | TWIN | TRIPLE | QUAD | SUITE | FAMILY | STUDIO | DORMITORY
+  viewTypes?: string[];     // CITY_VIEW | GARDEN_VIEW | MOUNTAIN_VIEW | POOL_VIEW | SEA_VIEW | NO_VIEW
+  isFeatured?: boolean;
+  // Sort
+  sortBy?: string;          // field name: 'price' | 'guestRating' | 'name' | ...
+  sortDirection?: string;   // 'asc' | 'desc'
 }
 
 // ---------------------------------------------------------------------------
@@ -107,15 +124,39 @@ export interface HotelDetailResponse {
   updatedAt?: string;
 }
 
+// ---------------------------------------------------------------------------
+// Review endpoint response types (matching /api/v1/hotels/{id}/reviews contract)
+// ---------------------------------------------------------------------------
+
+export interface HotelReviewApiItem {
+  id: string;
+  hotelId: string;
+  bookingId: string;
+  userId: string;
+  source: string;        // 'EASYSY' | ...
+  overallRating: number;
+  content: string;
+  createdAt: string;     // ISO 8601
+}
+
+export interface HotelReviewPageResponse {
+  content: HotelReviewApiItem[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+}
+
 export const hotelService = {
   /**
    * GET /api/v1/hotels/search
-   * Returns a paginated list of hotels matching the criteria.
-   * Unwraps the `content` array from the paginated response.
+   * Returns a paginated page response including metadata.
    */
-  searchHotels: async (params: HotelSearchParams): Promise<HotelSearchResultItem[]> => {
-    // Clean empty string parameters to prevent 404/validation errors
-    const cleanParams: any = {};
+  searchHotels: async (params: HotelSearchParams): Promise<HotelSearchPageResponse> => {
+    // Clean empty / undefined / null / empty-string parameters to prevent validation errors
+    const cleanParams: Record<string, any> = {};
     for (const [key, value] of Object.entries(params)) {
       if (value !== '' && value !== undefined && value !== null) {
         cleanParams[key] = value;
@@ -126,7 +167,7 @@ export const hotelService = {
       ENDPOINTS.HOTELS.SEARCH,
       { params: cleanParams },
     );
-    return response?.content ?? [];
+    return response;
   },
 
   /**
@@ -151,5 +192,21 @@ export const hotelService = {
    */
   getRooms: async (hotelId: string): Promise<RoomApiResponse[]> => {
     return apiClient.get(ENDPOINTS.HOTELS.ROOMS(hotelId));
+  },
+
+  /**
+   * GET /api/v1/hotels/{hotelId}/reviews
+   * Returns a paginated list of reviews for a specific hotel.
+   */
+  getHotelReviews: async (
+    hotelId: string,
+    page: number = 0,
+    size: number = 20,
+  ): Promise<HotelReviewPageResponse> => {
+    const response: HotelReviewPageResponse = await apiClient.get(
+      ENDPOINTS.HOTELS.REVIEWS(hotelId),
+      { params: { page, size } },
+    );
+    return response;
   },
 };

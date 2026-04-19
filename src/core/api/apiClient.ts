@@ -7,6 +7,9 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  paramsSerializer: {
+    indexes: null, // Spring Boot expects `amenities=wifi&amenities=pool` not `amenities[]=wifi`
+  },
 });
 
 apiClient.interceptors.request.use(

@@ -16,17 +16,14 @@ import {useTheme} from '../../../app/providers/ThemeProvider';
 import BottomSheetModal from '../../../shared/components/BottomSheetModal';
 import {useTranslation} from 'react-i18next';
 import Icon from 'react-native-vector-icons/Ionicons';
+import {HotelSortOption} from '../types/hotelTypes';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-export type HotelSortOption =
-  | 'recommended'
-  | 'price_asc'
-  | 'price_desc'
-  | 'rating_desc'
-  | 'name_asc';
+// HotelSortOption is defined in hotelTypes.ts — imported above.
+export type {HotelSortOption};
 
 const SORT_OPTIONS: {key: HotelSortOption; icon: string; labelKey: string}[] = [
   {key: 'recommended', icon: 'star-outline', labelKey: 'hotels.sort.recommended'},

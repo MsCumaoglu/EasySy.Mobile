@@ -88,7 +88,7 @@ const HotelFilterModal: React.FC<Props> = ({
   };
 
   const toggleCategory = (c: string) => {
-    setDraft(prev => ({...prev, category: prev.category === c ? undefined : c}));
+    setDraft(prev => ({...prev, propertyType: prev.propertyType === c ? undefined : c}));
   };
 
   const setPriceRange = (min: number, max: number) => {
@@ -96,7 +96,7 @@ const HotelFilterModal: React.FC<Props> = ({
   };
 
   const setRating = (r: number) => {
-    setDraft(prev => ({...prev, rating: prev.rating === r ? undefined : r}));
+    setDraft(prev => ({...prev, minGuestRating: prev.minGuestRating === r ? undefined : r}));
   };
 
   const handleApply = () => {
@@ -228,7 +228,7 @@ const HotelFilterModal: React.FC<Props> = ({
         <Text style={s.sectionLabel}>{t('hotels.filters.minRating')}</Text>
         <View style={s.chipRow}>
           {RATINGS.map(r => {
-            const active = draft.rating === r;
+            const active = draft.minGuestRating === r;
             return (
               <TouchableOpacity
                 key={r}
@@ -251,7 +251,7 @@ const HotelFilterModal: React.FC<Props> = ({
         <Text style={s.sectionLabel}>{t('hotels.filters.category')}</Text>
         <View style={s.chipRow}>
           {CATEGORIES.map(c => {
-            const active = draft.category === c;
+            const active = draft.propertyType === c;
             return (
               <TouchableOpacity
                 key={c}

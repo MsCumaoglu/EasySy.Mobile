@@ -1,25 +1,31 @@
 /**
- * Hotel Repository — Cache-Aside Orchestrator
+ * Hotel Repository — API-First Orchestrator
  *
- * This is the SINGLE source of truth for hotel data.
- * Screens and hooks never call the API or DB directly.
+ * Strategy (simple, reliable):
+ *   1. Try the API call directly.
+ *   2. On success → upsert into SQLite → return data.
+ *   3. On network error → fall back to SQLite cache.
  *
- * Flow for every data request:
- *  1. Build a deterministic cache key.
- *  2. Check SQLite → if fresh data exists, return immediately.
- *  3. If stale / missing → fetch from API (mock in DEV, real in PROD).
- *  4. Persist API response to SQLite for future requests.
- *  5. Return the fresh data.
+ * NO ping-to-Google check. We just try the API and handle failures.
+ * This ensures sort/filter params always reach the backend when online.
  */
 
 import {hotelDao, reviewDao, locationDao} from '../../../core/database/hotelDao';
-import {hotelService, HotelSearchResultItem} from '../../../core/api/services/hotelService';
-import {hotelMockService} from './hotelMockService';
+import {
+  hotelService,
+  HotelSearchResultItem,
+  HotelReviewApiItem,
+} from '../../../core/api/services/hotelService';
 import {Hotel, HotelAmenity, HotelReview} from '../models/Hotel';
-import {HotelSearchParams} from '../types/hotelTypes';
-import i18n from '../../../localization/i18n';
+import {
+  HotelSearchParams,
+  HotelFilters,
+  HotelSortOption,
+  SORT_OPTION_TO_API,
+  CATEGORY_TO_PROPERTY_TYPE,
+} from '../types/hotelTypes';
 
-export const PAGE_SIZE = 10;
+export const PAGE_SIZE = 20;
 
 // ---------------------------------------------------------------------------
 // Amenity key mapping: backend slug → app HotelAmenity
@@ -52,51 +58,26 @@ function mapAmenities(raw: any[]): HotelAmenity[] {
     } else if (item && typeof item === 'object') {
       key = item.amenityKey || item.key || '';
     }
-
     if (key) {
       const mapped = AMENITY_MAP[key.toLowerCase()];
-      if (mapped && !result.includes(mapped)) {
-        result.push(mapped);
-      }
+      if (mapped && !result.includes(mapped)) { result.push(mapped); }
     }
   }
   return result;
 }
 
-function localizeHotel(hotel: Hotel): Hotel {
-  const lang = i18n.language;
-  const isAr = lang === 'ar';
-  const isTr = lang === 'tr';
-
-  return {
-    ...hotel,
-    name: isAr ? (hotel.nameAr || hotel.nameEn || hotel.name) : isTr ? (hotel.nameTr || hotel.nameEn || hotel.name) : (hotel.nameEn || hotel.nameAr || hotel.name),
-    description: isAr ? (hotel.descriptionAr || hotel.descriptionEn || hotel.description) : isTr ? (hotel.descriptionTr || hotel.descriptionEn || hotel.description) : (hotel.descriptionEn || hotel.descriptionAr || hotel.description),
-    location: isAr ? (hotel.addressAr || hotel.location) : isTr ? (hotel.addressTr || hotel.location) : (hotel.addressEn || hotel.location),
-    city: isAr ? (hotel.cityAr || hotel.city) : isTr ? (hotel.cityTr || hotel.city) : (hotel.cityEn || hotel.city),
-    policy: hotel.policy ? {
-      ...hotel.policy,
-      cancellationPolicy: isAr 
-        ? (hotel.policy.cancellationPolicyAr || hotel.policy.cancellationPolicyEn || hotel.policy.cancellationPolicy) 
-        : isTr 
-        ? (hotel.policy.cancellationPolicyTr || hotel.policy.cancellationPolicyEn || hotel.policy.cancellationPolicy)
-        : (hotel.policy.cancellationPolicyEn || hotel.policy.cancellationPolicyAr || hotel.policy.cancellationPolicy),
-    } : undefined,
-  };
-}
-
 function mapCategory(propertyType: string, stars: number): Hotel['category'] {
-  const type = propertyType.toUpperCase();
-  if (type === 'RESORT') { return 'resort'; }
-  if (type === 'HOTEL' && stars >= 4) { return 'luxury'; }
-  if (type === 'HOTEL') { return 'business'; }
+  const type = (propertyType || '').toUpperCase();
+  if (type === 'RESORT')                    { return 'resort'; }
+  if (type === 'HOTEL' && stars >= 4)       { return 'luxury'; }
+  if (type === 'HOTEL')                     { return 'business'; }
   return 'budget';
 }
 
 function mapApiHotel(item: HotelSearchResultItem): Hotel {
-  const hotel: Hotel = {
+  return {
     id:          item.id,
-    name:        item.name,  // Already localized by backend via Accept-Language
+    name:        item.name,
     location:    `${item.city}, ${item.district}`,
     city:        item.city,
     country:     'Syria',
@@ -111,18 +92,41 @@ function mapApiHotel(item: HotelSearchResultItem): Hotel {
     coordinates: {latitude: 0, longitude: 0},
     category:    mapCategory(item.propertyType, item.starRating),
   };
-  return hotel;
+}
+
+function mapApiReview(item: HotelReviewApiItem): HotelReview {
+  const authorName = item.userId
+    ? `${item.source ?? 'User'}-${item.userId.slice(0, 6)}`
+    : 'Anonymous';
+  const date = item.createdAt
+    ? new Date(item.createdAt).toLocaleDateString()
+    : '';
+  return {
+    id:            item.id,
+    hotelId:       item.hotelId,
+    bookingId:     item.bookingId,
+    userId:        item.userId,
+    source:        item.source,
+    overallRating: item.overallRating,
+    content:       item.content,
+    createdAt:     item.createdAt,
+    authorName,
+    rating:        item.overallRating,
+    comment:       item.content,
+    date,
+  };
 }
 
 // ---------------------------------------------------------------------------
 // Cache key helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Builds a stable, human-readable cache key for a search query + page.
- * Example: "search:tartus:2026-05-01:2026-05-05:2:1:rooms:1:page:1"
- */
-function buildSearchKey(params: Partial<HotelSearchParams>, page: number): string {
+function buildSearchKey(
+  params: Partial<HotelSearchParams>,
+  page: number,
+  filters: HotelFilters,
+  sortBy: HotelSortOption,
+): string {
   return [
     'search',
     (params.location ?? '').toLowerCase().trim(),
@@ -130,10 +134,18 @@ function buildSearchKey(params: Partial<HotelSearchParams>, page: number): strin
     params.checkOut ?? '',
     params.guests ?? 2,
     params.children ?? 0,
-    'rooms',
-    params.rooms ?? 1,
-    'page',
-    page,
+    'rooms', params.rooms ?? 1,
+    'page',  page,
+    'sort',  sortBy,
+    'minp',  filters.minPrice ?? '',
+    'maxp',  filters.maxPrice ?? '',
+    'g_rat', filters.minGuestRating ?? '',
+    's_rat', filters.minStarRating ?? '',
+    'ptyp',  filters.propertyType ?? '',
+    'feat',  filters.isFeatured ? '1' : '0',
+    'room',  (filters.roomTypes ?? []).slice().sort().join(','),
+    'view',  (filters.viewTypes ?? []).slice().sort().join(','),
+    'amen',  (filters.amenities ?? []).slice().sort().join(','),
   ].join(':');
 }
 
@@ -143,200 +155,219 @@ function buildSearchKey(params: Partial<HotelSearchParams>, page: number): strin
 
 export const hotelRepository = {
   /**
-   * Search hotels with pagination.
+   * Search hotels with pagination, optional filters and sort.
    *
-   * @param params  Search parameters (location, dates, guests…)
-   * @param page    1-indexed page number
-   * @returns       A page of Hotel objects (up to PAGE_SIZE items)
+   * Always tries the API first. On network failure → SQLite fallback.
+   * Sort and filter params are always forwarded to the API when reachable.
    */
   async searchHotels(
     params: Partial<HotelSearchParams>,
     page: number,
-  ): Promise<Hotel[]> {
-    const cacheKey = buildSearchKey(params, page);
+    filters: HotelFilters = {},
+    sortBy: HotelSortOption = 'recommended',
+  ): Promise<{hotels: Hotel[]; totalPages: number; isLast: boolean}> {
+    const cacheKey = buildSearchKey(params, page, filters, sortBy);
 
-    // 1. Try local cache first
-    let cached: Hotel[] | null = null;
+    // Resolve sort params
+    const {sortBy: apiSortBy, sortDirection} = SORT_OPTION_TO_API[sortBy];
+
+    // ── Try API first ──
     try {
-      cached = hotelDao.getBySearchKey(cacheKey);
-    } catch (e) {
-      console.warn('[DB Error] Failed to read from cache, falling back to API:', e);
-    }
-    
-    if (cached !== null) {
-      return cached.map(localizeHotel);
-    }
+      const response = await hotelService.searchHotels({
+        // Location
+        city:           params.location || undefined,
+        // Dates
+        checkIn:        params.checkIn  || undefined,
+        checkOut:       params.checkOut || undefined,
+        // Guests
+        adults:         params.guests   || undefined,
+        children:       params.children || undefined,
+        // Pagination (backend is 0-indexed)
+        page:           page - 1,
+        size:           PAGE_SIZE,
+        // Filters — exact backend param names from swagger
+        minPrice:       filters.minPrice,
+        maxPrice:       filters.maxPrice,
+        minGuestRating: filters.minGuestRating,   // matched to swagger
+        minStarRating:  filters.minStarRating,    // matched to swagger
+        amenities:      filters.amenities,        // formatted by paramsSerializer
+        propertyType:   filters.propertyType,     // correctly mapped propertyType
+        roomTypes:      filters.roomTypes,        // new from swagger
+        viewTypes:      filters.viewTypes,        // new from swagger
+        isFeatured:     filters.isFeatured,       // new from swagger
+        // Sort — two separate fields (sortBy field + sortDirection)
+        sortBy:         apiSortBy,
+        sortDirection,
+      });
 
-    // 2. Cache miss or stale → fetch ALL from service (mock returns full list)
-    //    Then paginate in-memory. When real API supports pagination, pass
-    //    page+limit directly to the endpoint instead.
-    // 2. Cache miss → fetch from real API
-    const apiItems = await hotelService.searchHotels({
-      city:     params.location || undefined,
-      checkIn:  params.checkIn  || '',
-      checkOut: params.checkOut || '',
-      adults:   params.guests   || 1,
-      rooms:    params.rooms    || 1,
-    });
+      const hotels = (response.content ?? []).map(mapApiHotel);
 
-    const allHotels: Hotel[] = apiItems.map(mapApiHotel);
-
-    // Client-side pagination (remove when server implements LIMIT/OFFSET)
-    const start = (page - 1) * PAGE_SIZE;
-    const pageData = allHotels.slice(start, start + PAGE_SIZE);
-
-    // 3. Persist full hotel records + search mapping to SQLite
-    if (pageData.length > 0) {
-      try {
-        hotelDao.insertSearchResult(cacheKey, pageData);
-      } catch (e) {
-        console.warn('[DB Error] Failed to cache results:', e);
+      // Upsert into SQLite for offline fallback
+      if (hotels.length > 0) {
+        try { hotelDao.insertSearchResult(cacheKey, hotels); } catch (e) {
+          console.warn('[DB] Failed to cache search results:', e);
+        }
       }
-    }
 
-    return pageData.map(localizeHotel);
+      return {
+        hotels,
+        totalPages: response.totalPages ?? 1,
+        isLast:     response.last ?? true,
+      };
+    } catch (apiError) {
+      // ── API unreachable → SQLite fallback ──
+      console.warn('[hotelRepository] API failed, serving from SQLite cache:', apiError);
+      try {
+        const cached = hotelDao.getBySearchKey(cacheKey);
+        if (cached) {
+          return {hotels: cached, totalPages: 1, isLast: true};
+        }
+      } catch (dbError) {
+        console.warn('[DB] Failed to read from cache:', dbError);
+      }
+      return {hotels: [], totalPages: 1, isLast: true};
+    }
   },
 
   /**
    * Fetch a single hotel by ID.
-   * Tries local DB first; falls back to API if not cached.
+   * API first → cache. On failure → SQLite.
    */
   async getHotelById(id: string): Promise<Hotel | null> {
-    // 1. Try local cache
-    const cached = hotelDao.getById(id);
-    
-    // Use cache only if it has full detail data (description + images)
-    if (cached && cached.description && cached.images.length > 0) {
-      return localizeHotel(cached);
-    }
-
-    // 2. Cache miss → fetch from real API service
     try {
       const d = await hotelService.getHotelDetails(id);
       if (d) {
-        // Extract image URLs, sorted by sortOrder
-        const sortedImages = [...(d.images || [])]
-          .sort((a, b) => a.sortOrder - b.sortOrder);
-        const imageUrls = sortedImages
-          .map(img => img.url)
-          .filter(Boolean);
-
-        // Find primary image as fallback
+        const sortedImages = [...(d.images || [])].sort((a, b) => a.sortOrder - b.sortOrder);
+        const imageUrls = sortedImages.map(img => img.url).filter(Boolean);
         const primaryImg = sortedImages.find(img => img.isPrimary);
-
-        // Map amenity objects → app amenity keys
-        const safeAmenities = mapAmenities(d.amenities || []);
-
-        // Build location string
         const location = d.district
           ? `${d.city}, ${d.district}`
-          : d.address || d.city || cached?.location || 'Unknown';
+          : d.address || d.city || 'Unknown';
 
         const hotel: Hotel = {
-          id: d.id || id,
-          name: d.name || cached?.name || 'Unknown Hotel',
+          id:          d.id || id,
+          name:        d.name || 'Unknown Hotel',
           location,
-          city: d.city || cached?.city || 'Unknown',
-          country: 'Syria',
-          rating: d.avgRating ?? cached?.rating ?? 0,
-          reviewCount: d.totalReviews ?? cached?.reviewCount ?? 0,
-          priceMin: cached?.priceMin ?? 0,
-          priceMax: cached?.priceMax ?? 0,
-          currency: 'SYP',
-          images: imageUrls.length > 0
+          city:        d.city || 'Unknown',
+          country:     'Syria',
+          rating:      d.avgRating ?? 0,
+          reviewCount: d.totalReviews ?? 0,
+          priceMin:    0,
+          priceMax:    0,
+          currency:    'SYP',
+          images:      imageUrls.length > 0
             ? imageUrls
-            : (primaryImg ? [primaryImg.url] : (cached?.images || [])),
-          amenities: safeAmenities.length > 0 ? safeAmenities : (cached?.amenities || []),
-          description: d.description || cached?.description || '',
-          coordinates: {
-            latitude: d.latitude || 0,
-            longitude: d.longitude || 0,
-          },
-          category: mapCategory(d.propertyType || 'HOTEL', d.starRating || 3),
-          policy: d.policy ? {
-            checkInFrom: d.policy.checkInFrom || d.checkInTime || '14:00',
-            checkInUntil: d.policy.checkInUntil || '00:00',
-            checkOutUntil: d.policy.checkOutUntil || d.checkOutTime || '12:00',
-            childrenAllowed: !!d.policy.childrenAllowed,
-            petsAllowed: !!d.policy.petsAllowed,
-            smokingAllowed: !!d.policy.smokingAllowed,
+            : (primaryImg ? [primaryImg.url] : []),
+          amenities:   mapAmenities(d.amenities || []),
+          description: d.description || '',
+          coordinates: {latitude: d.latitude || 0, longitude: d.longitude || 0},
+          category:    mapCategory(d.propertyType || 'HOTEL', d.starRating || 3),
+          policy:      d.policy ? {
+            checkInFrom:        d.policy.checkInFrom  || d.checkInTime  || '14:00',
+            checkInUntil:       d.policy.checkInUntil || '00:00',
+            checkOutUntil:      d.policy.checkOutUntil || d.checkOutTime || '12:00',
+            childrenAllowed:    !!d.policy.childrenAllowed,
+            petsAllowed:        !!d.policy.petsAllowed,
+            smokingAllowed:     !!d.policy.smokingAllowed,
             cancellationPolicy: d.policy.cancellationPolicy || '',
           } : undefined,
         };
-        hotelDao.insertHotel(hotel);
-        return hotel; // Already localized by backend via Accept-Language
+
+        try { hotelDao.insertHotel(hotel); } catch (e) {
+          console.warn('[DB] Failed to upsert hotel detail:', e);
+        }
+
+        return hotel;
       }
     } catch (e) {
-      console.error('[API Error] Failed to fetch hotel details:', e);
+      console.error('[API] Failed to fetch hotel details, falling back to SQLite:', e);
     }
-    return cached ? localizeHotel(cached) : null;
+
+    // Fallback → SQLite
+    try {
+      return hotelDao.getById(id) ?? null;
+    } catch {
+      return null;
+    }
   },
 
   /**
-   * Fetch reviews for a hotel.
-   * Cached for the same TTL as hotel records (30 min).
+   * Fetch reviews for a hotel (paginated).
+   * API first → cache page 0. On failure → SQLite.
    */
-  async getHotelReviews(hotelId: string): Promise<HotelReview[]> {
-    // 1. Try local cache
-    const cached = reviewDao.get(hotelId);
-    if (cached && cached.length > 0) {
-      return cached;
-    }
+  async getHotelReviews(
+    hotelId: string,
+    page: number = 0,
+    size: number = PAGE_SIZE,
+  ): Promise<{reviews: HotelReview[]; isLast: boolean; totalPages: number}> {
+    try {
+      const response = await hotelService.getHotelReviews(hotelId, page, size);
+      const reviews = (response.content ?? []).map(mapApiReview);
 
-    // 2. Cache miss → fetch from service
-    const reviews = await hotelMockService.getHotelReviews(hotelId);
-    reviewDao.insert(hotelId, reviews);
-    return reviews;
+      // Cache first page as offline fallback
+      if (page === 0 && reviews.length > 0) {
+        try { reviewDao.insert(hotelId, reviews); } catch (e) {
+          console.warn('[DB] Failed to cache reviews:', e);
+        }
+      }
+
+      return {
+        reviews,
+        isLast:     response.last ?? true,
+        totalPages: response.totalPages ?? 1,
+      };
+    } catch (e) {
+      console.error('[API] Failed to fetch reviews, falling back to SQLite:', e);
+      const cached = (() => { try { return reviewDao.get(hotelId); } catch { return null; } })();
+      return {reviews: cached ?? [], isLast: true, totalPages: 1};
+    }
   },
 
   /**
    * Fetch popular hotels.
-   * Uses page 1 of the default search as a proxy.
-   * Adjust if the API has a dedicated /popular endpoint.
    */
   async getPopularHotels(): Promise<Hotel[]> {
-    const cacheKey = 'popular:page:1';
-    const cached = hotelDao.getBySearchKey(cacheKey);
-    if (cached && cached.length > 0) {return cached;}
-
-    const popular = await hotelMockService.getPopularHotels();
-    if (popular.length > 0) {
-      hotelDao.insertSearchResult(cacheKey, popular);
+    try {
+      const response = await hotelService.searchHotels({page: 0, size: 10});
+      const hotels = (response.content ?? []).map(mapApiHotel);
+      if (hotels.length > 0) {
+        try { hotelDao.insertSearchResult('popular:page:1', hotels); } catch {}
+      }
+      return hotels;
+    } catch (e) {
+      console.error('[API] Failed to fetch popular hotels:', e);
+      try {
+        return hotelDao.getBySearchKey('popular:page:1') ?? [];
+      } catch {
+        return [];
+      }
     }
-    return popular;
   },
 
   /**
-   * Force-invalidates all search caches so the next request hits the API.
-   * Useful after a pull-to-refresh gesture.
+   * Force-invalidates all search caches.
    */
   invalidateSearchCache(): void {
-    hotelDao.invalidateSearches();
+    try { hotelDao.invalidateSearches(); } catch {}
   },
 
   /**
    * Fetch available locations (cities) and their hotel counts.
-   * Tries local DB first; falls back to API.
    */
   async fetchLocations(): Promise<any[]> {
     try {
-      const cached = locationDao.getLocations();
-      if (cached && cached.length > 0) {
-        return cached;
-      }
-    } catch (e) {
-      console.warn('[DB Error] Failed to read locations from cache:', e);
-    }
-
-    try {
       const locations = await hotelService.getLocations();
       if (locations && locations.length > 0) {
-        locationDao.insertLocations(locations);
+        try { locationDao.insertLocations(locations); } catch {}
       }
-      return locations;
-    } catch (error) {
-      console.error('[API Error] Failed to fetch locations:', error);
-      return [];
+      return locations ?? [];
+    } catch (e) {
+      console.error('[API] Failed to fetch locations:', e);
+      try {
+        return locationDao.getLocations() ?? [];
+      } catch {
+        return [];
+      }
     }
   },
 };

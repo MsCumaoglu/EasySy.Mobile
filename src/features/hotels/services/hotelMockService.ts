@@ -120,31 +120,41 @@ const MOCK_REVIEWS: HotelReview[] = [
   {
     id: 'r1',
     hotelId: '1',
+    overallRating: 5,
+    content: 'Absolutely stunning hotel! The pool area is breathtaking and the staff were incredibly helpful.',
+    createdAt: '2026-03-15T10:00:00Z',
+    // display helpers
     authorName: 'Sarah M.',
     rating: 5,
-    comment:
-      'Absolutely stunning hotel! The pool area is breathtaking and the staff were incredibly helpful.',
+    comment: 'Absolutely stunning hotel! The pool area is breathtaking and the staff were incredibly helpful.',
     date: '2026-03-15',
   },
   {
     id: 'r2',
     hotelId: '1',
+    overallRating: 4.8,
+    content: 'Fantastic experience, the breakfast buffet was extraordinary. Will definitely return.',
+    createdAt: '2026-02-28T10:00:00Z',
+    // display helpers
     authorName: 'Ahmed K.',
     rating: 4.8,
-    comment:
-      'Fantastic experience, the breakfast buffet was extraordinary. Will definitely return.',
+    comment: 'Fantastic experience, the breakfast buffet was extraordinary. Will definitely return.',
     date: '2026-02-28',
   },
   {
     id: 'r3',
     hotelId: '2',
+    overallRating: 4.5,
+    content: 'Great location, clean rooms, and friendly staff. Perfect for a business trip.',
+    createdAt: '2026-03-10T10:00:00Z',
+    // display helpers
     authorName: 'Maria L.',
     rating: 4.5,
-    comment:
-      'Great location, clean rooms, and friendly staff. Perfect for a business trip.',
+    comment: 'Great location, clean rooms, and friendly staff. Perfect for a business trip.',
     date: '2026-03-10',
   },
 ];
+
 
 export const hotelMockService = {
   searchHotels: async (params: Partial<HotelSearchParams>): Promise<Hotel[]> => {

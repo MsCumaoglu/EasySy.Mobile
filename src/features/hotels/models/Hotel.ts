@@ -54,10 +54,20 @@ export type HotelAmenity =
   | 'breakfast';
 
 export interface HotelReview {
+  // Core API fields
   id: string;
   hotelId: string;
-  authorName: string;
-  rating: number;
-  comment: string;
-  date: string;
+  bookingId?: string;
+  userId?: string;
+  source?: string;        // 'EASYSY' | ...
+  overallRating: number;  // 0-5
+  content: string;        // Review text
+  createdAt: string;      // ISO 8601
+
+  // Computed / display helpers (populated during mapping)
+  authorName: string;     // Derived from userId or 'Anonymous'
+  rating: number;         // Alias for overallRating
+  comment: string;        // Alias for content
+  date: string;           // Formatted createdAt
 }
+

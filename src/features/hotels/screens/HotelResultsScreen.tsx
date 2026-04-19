@@ -25,8 +25,8 @@ import Loader from '../../../shared/components/Loader';
 import {useTranslation} from 'react-i18next';
 import {useHotelSearch} from '../hooks/useHotelSearch';
 import HotelFilterModal from '../components/HotelFilterModal';
-import HotelSortModal, {HotelSortOption} from '../components/HotelSortModal';
-import {HotelFilters} from '../types/hotelTypes';
+import HotelSortModal from '../components/HotelSortModal';
+import {HotelFilters, HotelSortOption} from '../types/hotelTypes';
 
 type HotelResultsNavProp = NativeStackNavigationProp<
   HotelStackParamList,
@@ -34,39 +34,15 @@ type HotelResultsNavProp = NativeStackNavigationProp<
 >;
 
 // ---------------------------------------------------------------------------
-// Helpers — client-side filter & sort (applied on top of cached pages)
+// Helpers
 // ---------------------------------------------------------------------------
-
-function applyFilters(hotels: Hotel[], filters: HotelFilters): Hotel[] {
-  return hotels.filter(h => {
-    if (filters.minPrice !== undefined && h.priceMin < filters.minPrice) {return false;}
-    if (filters.maxPrice !== undefined && h.priceMax > filters.maxPrice) {return false;}
-    if (filters.rating !== undefined && h.rating < filters.rating) {return false;}
-    if (filters.category && h.category !== filters.category) {return false;}
-    if (filters.amenities && filters.amenities.length > 0) {
-      if (!filters.amenities.every(a => h.amenities.includes(a))) {return false;}
-    }
-    return true;
-  });
-}
-
-function applySort(hotels: Hotel[], sort: HotelSortOption): Hotel[] {
-  const arr = [...hotels];
-  switch (sort) {
-    case 'price_asc':   return arr.sort((a, b) => a.priceMin - b.priceMin);
-    case 'price_desc':  return arr.sort((a, b) => b.priceMin - a.priceMin);
-    case 'rating_desc': return arr.sort((a, b) => b.rating - a.rating);
-    case 'name_asc':    return arr.sort((a, b) => a.name.localeCompare(b.name));
-    default:            return arr; // 'recommended' — keep API order
-  }
-}
 
 function hasActiveFilters(filters: HotelFilters): boolean {
   return !!(
     filters.minPrice !== undefined ||
     filters.maxPrice !== undefined ||
-    filters.rating !== undefined ||
-    filters.category ||
+    filters.minGuestRating !== undefined ||
+    filters.propertyType ||
     (filters.amenities && filters.amenities.length > 0)
   );
 }
@@ -87,12 +63,15 @@ const HotelResultsScreen: React.FC = () => {
   const [filterOpen, setFilterOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
 
-  // Filter & sort state
+  /**
+   * Filter & Sort state — changing these triggers a fresh API request
+   * because they are included in the queryKey of useHotelSearch.
+   */
   const [activeFilters, setActiveFilters] = useState<HotelFilters>({});
   const [activeSort, setActiveSort] = useState<HotelSortOption>('recommended');
 
   // ---------------------------------------------------------------------------
-  // Infinite query
+  // Infinite query — filters & sort are forwarded to the API
   // ---------------------------------------------------------------------------
 
   const {
@@ -103,15 +82,16 @@ const HotelResultsScreen: React.FC = () => {
     isLoading,
     isError,
     refetch,
-  } = useHotelSearch(params);
+  } = useHotelSearch(params, activeFilters, activeSort);
 
   /**
-   * Flatten → filter → sort. Memoized so it only recomputes when inputs change.
+   * Flatten all pages into a single hotel list.
+   * No client-side filtering or sorting — the API handles that.
    */
-  const hotels = useMemo(() => {
-    const flat = data?.pages.flat() ?? [];
-    return applySort(applyFilters(flat, activeFilters), activeSort);
-  }, [data, activeFilters, activeSort]);
+  const hotels = useMemo<Hotel[]>(
+    () => data?.pages.flatMap(p => p.hotels) ?? [],
+    [data],
+  );
 
   const isFilterActive = hasActiveFilters(activeFilters);
   const isSortActive = activeSort !== 'recommended';
@@ -126,10 +106,20 @@ const HotelResultsScreen: React.FC = () => {
   };
 
   const handleEndReached = () => {
-    if (hasNextPage && !isFetchingNextPage) {fetchNextPage();}
+    if (hasNextPage && !isFetchingNextPage) { fetchNextPage(); }
   };
 
   const handleRefresh = () => { refetch(); };
+
+  const handleApplyFilters = (filters: HotelFilters) => {
+    setActiveFilters(filters);
+    // queryKey changes → TanStack automatically fires a new API request
+  };
+
+  const handleApplySort = (sort: HotelSortOption) => {
+    setActiveSort(sort);
+    // queryKey changes → TanStack automatically fires a new API request
+  };
 
   // ---------------------------------------------------------------------------
   // Date / guest subtitle
@@ -388,13 +378,13 @@ const HotelResultsScreen: React.FC = () => {
         visible={filterOpen}
         onClose={() => setFilterOpen(false)}
         filters={activeFilters}
-        onApply={setActiveFilters}
+        onApply={handleApplyFilters}
       />
       <HotelSortModal
         visible={sortOpen}
         onClose={() => setSortOpen(false)}
         activeSort={activeSort}
-        onSelect={setActiveSort}
+        onSelect={handleApplySort}
       />
     </SafeAreaView>
   );
