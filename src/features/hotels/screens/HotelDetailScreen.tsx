@@ -14,6 +14,7 @@ import {
   Alert,
   Platform,
   ActivityIndicator,
+  useWindowDimensions,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
@@ -33,8 +34,7 @@ import PrimaryButton from '../../../shared/components/PrimaryButton';
 import Loader from '../../../shared/components/Loader';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-const {width: SCREEN_WIDTH} = Dimensions.get('window');
-const THUMB_SIZE = (SCREEN_WIDTH - 40 - 5) / 3; // 16px side padding x2 + 2 gaps x4
+// width constants moved inside component for dynamic orientation support
 
 type HotelDetailNavProp = NativeStackNavigationProp<HotelStackParamList, 'HotelDetail'>;
 type HotelDetailRouteProp = RouteProp<HotelStackParamList, 'HotelDetail'>;
@@ -56,6 +56,8 @@ const HotelDetailScreen: React.FC = () => {
   const {t} = useTranslation();
   const {colors, spacing, radius, typography} = useTheme();
   const {isRTL, flipIcon} = useRTL();
+  const {width: screenWidth} = useWindowDimensions();
+  const thumbSize = (screenWidth - 40 - 5) / 3;
 
   // Jotai atom provides instant initial data (no loading flash when navigating from list)
   const selectedHotel = useAtomValue(selectedHotelAtom);
@@ -219,19 +221,19 @@ const HotelDetailScreen: React.FC = () => {
       gap: 6,
     },
     thumbWrapper: {
-      width: THUMB_SIZE,
-      height: THUMB_SIZE * 0.75,
+      width: thumbSize,
+      height: thumbSize * 0.75,
       overflow: 'hidden',
     },
     thumbWrapperLast: {
-      width: THUMB_SIZE,
-      height: THUMB_SIZE * 0.75,
+      width: thumbSize,
+      height: thumbSize * 0.75,
       borderBottomRightRadius: radius.xl,
       overflow: 'hidden',
     },
     thumbWrapperFirst: {
-      width: THUMB_SIZE,
-      height: THUMB_SIZE * 0.75,
+      width: thumbSize,
+      height: thumbSize * 0.75,
       borderBottomLeftRadius: radius.xl,
       overflow: 'hidden',
     },
@@ -260,7 +262,7 @@ const HotelDetailScreen: React.FC = () => {
       backgroundColor: '#000',
     },
     lightboxImage: {
-      width: SCREEN_WIDTH,
+      width: screenWidth,
       height: '100%',
     },
     lightboxHeader: {
@@ -842,18 +844,18 @@ const HotelDetailScreen: React.FC = () => {
             showsHorizontalScrollIndicator={false}
             initialScrollIndex={lightboxIndex}
             getItemLayout={(_, index) => ({
-              length: SCREEN_WIDTH,
-              offset: SCREEN_WIDTH * index,
+              length: screenWidth,
+              offset: screenWidth * index,
               index,
             })}
             onMomentumScrollEnd={e => {
               const idx = Math.round(
-                e.nativeEvent.contentOffset.x / SCREEN_WIDTH,
+                e.nativeEvent.contentOffset.x / screenWidth,
               );
               setLightboxIndex(idx);
             }}
             renderItem={({item}) => (
-              <View style={{width: SCREEN_WIDTH, height: '100%', justifyContent: 'center'}}>
+              <View style={{width: screenWidth, height: '100%', justifyContent: 'center'}}>
                 <Image
                   source={{uri: item}}
                   style={styles.lightboxImage}
