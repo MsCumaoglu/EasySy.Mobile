@@ -11,6 +11,7 @@
  */
 
 import {hotelDao, reviewDao, locationDao} from '../../../core/database/hotelDao';
+import { Alert } from 'react-native';
 import {
   hotelService,
   HotelSearchResultItem,
@@ -132,9 +133,7 @@ function buildSearchKey(
     (params.location ?? '').toLowerCase().trim(),
     params.checkIn ?? '',
     params.checkOut ?? '',
-    params.guests ?? 2,
-    params.children ?? 0,
-    'rooms', params.rooms ?? 1,
+    params.roomsConfig ? params.roomsConfig.map(r => `${r.adults}:${r.children}`).join(',') : '',
     'page',  page,
     'sort',  sortBy,
     'minp',  filters.minPrice ?? '',
@@ -179,9 +178,8 @@ export const hotelRepository = {
         // Dates
         checkIn:        params.checkIn  || undefined,
         checkOut:       params.checkOut || undefined,
-        // Guests
-        adults:         params.guests   || undefined,
-        children:       params.children || undefined,
+        // Rooms formatted for backend (e.g. 2:0,1:1)
+        rooms:          params.roomsConfig ? params.roomsConfig.map(r => `${r.adults}:${r.children}`).join(',') : undefined,
         // Pagination (backend is 0-indexed)
         page:           page - 1,
         size:           PAGE_SIZE,
@@ -214,18 +212,23 @@ export const hotelRepository = {
         totalPages: response.totalPages ?? 1,
         isLast:     response.last ?? true,
       };
-    } catch (apiError) {
+    } catch (apiError: any) {
       // ── API unreachable → SQLite fallback ──
       console.warn('[hotelRepository] API failed, serving from SQLite cache:', apiError);
+      Alert.alert('API Error', `Could not fetch hotels from server: ${apiError?.message || 'Unknown Error'}`);
+      
       try {
         const cached = hotelDao.getBySearchKey(cacheKey);
-        if (cached) {
+        if (cached && cached.length > 0) {
           return {hotels: cached, totalPages: 1, isLast: true};
         }
       } catch (dbError) {
         console.warn('[DB] Failed to read from cache:', dbError);
       }
-      return {hotels: [], totalPages: 1, isLast: true};
+      
+      // If we reach here, API failed AND cache is empty. 
+      // Throw the error so React Query doesn't cache an empty array!
+      throw apiError;
     }
   },
 

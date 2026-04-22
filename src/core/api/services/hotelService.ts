@@ -9,8 +9,7 @@ export interface HotelSearchParams {
   searchQuery?: string;     // free-text search
   checkIn?: string;         // YYYY-MM-DD (optional per swagger)
   checkOut?: string;        // YYYY-MM-DD (optional per swagger)
-  adults?: number;
-  children?: number;
+  rooms?: string;           // Format: 'Adults:Children,Adults:Children'
   page?: number;            // 0-indexed
   size?: number;            // default 20
   // Filters
@@ -162,11 +161,13 @@ export const hotelService = {
         cleanParams[key] = value;
       }
     }
+    console.log('[hotelService] searchHotels req:', cleanParams);
 
     const response: HotelSearchPageResponse = await apiClient.get(
       ENDPOINTS.HOTELS.SEARCH,
       { params: cleanParams },
     );
+    console.log('[hotelService] searchHotels res count:', response?.content?.length);
     return response;
   },
 

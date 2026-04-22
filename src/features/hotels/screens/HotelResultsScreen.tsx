@@ -133,8 +133,9 @@ const HotelResultsScreen: React.FC = () => {
       ? `${formatShort(params.checkIn)} → ${formatShort(params.checkOut)}`
       : t('hotels.selectDates');
 
-  const guestStr = `${params.guests}`;
-
+  const totalAdults = params.roomsConfig?.reduce((sum, r) => sum + r.adults, 0) || 0;
+  const totalChildren = params.roomsConfig?.reduce((sum, r) => sum + r.children, 0) || 0;
+  const guestStr = `${totalAdults + totalChildren} ${t('common.guests') || 'Guests'}, ${params.roomsConfig?.length || 1} ${t('common.rooms') || 'Rooms'}`;
   // ---------------------------------------------------------------------------
   // Styles
   // ---------------------------------------------------------------------------

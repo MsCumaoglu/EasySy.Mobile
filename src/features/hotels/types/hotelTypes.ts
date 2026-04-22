@@ -1,12 +1,15 @@
 import {HotelAmenity} from '../models/Hotel';
 
+export interface HotelRoomConfig {
+  adults: number;
+  children: number;
+}
+
 export interface HotelSearchParams {
   location: string;
   checkIn: string | null;
   checkOut: string | null;
-  guests: number;
-  children: number;
-  rooms: number;
+  roomsConfig: HotelRoomConfig[];
 }
 
 export interface HotelFilters {

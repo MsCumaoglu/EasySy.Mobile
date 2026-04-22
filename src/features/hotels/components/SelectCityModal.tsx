@@ -129,7 +129,10 @@ const SelectCityModal: React.FC<SelectCityModalProps> = ({
       marginBottom: spacing.md,
     },
     header: {
+      flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.xl,
       paddingBottom: spacing.md,
     },
     title: {
@@ -249,6 +252,9 @@ const SelectCityModal: React.FC<SelectCityModalProps> = ({
               
               <View style={styles.header}>
                 <Text style={styles.title}>{t('hotels.selectCity')}</Text>
+                <TouchableOpacity onPress={() => onSelect('')}>
+                    <Text style={{color: colors.primary, fontWeight: '600', fontSize: 16}}>{t('common.clear') || 'Clear'}</Text>
+                </TouchableOpacity>
               </View>
 
               <View style={styles.searchContainer}>

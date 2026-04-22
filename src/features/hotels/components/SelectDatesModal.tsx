@@ -302,9 +302,14 @@ const SelectDatesModal: React.FC<SelectDatesModalProps> = ({
                 <View style={styles.header}>
                     <View style={styles.headerRow}>
                         <Text style={styles.title}>Select Dates</Text>
-                        <TouchableOpacity onPress={onClose}>
-                            <Icon name="close" style={styles.closeBtn} />
-                        </TouchableOpacity>
+                        <View style={{flexDirection: 'row', alignItems: 'center', gap: 16}}>
+                          <TouchableOpacity onPress={() => { setTempStart(null); setTempEnd(null); }}>
+                              <Text style={{color: colors.primary, fontWeight: '600', fontSize: 16}}>Clear</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity onPress={onClose}>
+                              <Icon name="close" style={styles.closeBtn} />
+                          </TouchableOpacity>
+                        </View>
                     </View>
                     <View style={styles.selectedDatesRow}>
                         <View style={styles.dateChip}>

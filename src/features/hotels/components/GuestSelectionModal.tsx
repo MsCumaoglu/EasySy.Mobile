@@ -12,29 +12,49 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import {useTheme} from '../../../app/providers/ThemeProvider';
 
+import {HotelRoomConfig} from '../types/hotelTypes';
+import {useTranslation} from 'react-i18next';
+
 const {height: SCREEN_HEIGHT} = Dimensions.get('window');
 
 interface GuestSelectionModalProps {
   isVisible: boolean;
   onClose: () => void;
-  onApply: (adults: number, children: number, rooms: number) => void;
-  initialAdults: number;
-  initialChildren: number;
-  initialRooms: number;
+  onApply: (rooms: HotelRoomConfig[]) => void;
+  initialRoomsConfig: HotelRoomConfig[];
 }
 
 const GuestSelectionModal: React.FC<GuestSelectionModalProps> = ({
   isVisible,
   onClose,
   onApply,
-  initialAdults,
-  initialChildren,
-  initialRooms,
+  initialRoomsConfig,
 }) => {
+  const {t} = useTranslation();
   const {colors, spacing, radius, typography} = useTheme();
-  const [adults, setAdults] = useState(initialAdults);
-  const [children, setChildren] = useState(initialChildren);
-  const [rooms, setRooms] = useState(initialRooms);
+  const [rooms, setRooms] = useState<HotelRoomConfig[]>(initialRoomsConfig);
+
+  React.useEffect(() => {
+    if (isVisible) setRooms(initialRoomsConfig);
+  }, [isVisible, initialRoomsConfig]);
+
+  const updateRoom = (idx: number, field: 'adults' | 'children', delta: number) => {
+    setRooms(prev => prev.map((r, i) => {
+      if (i !== idx) return r;
+      const val = Math.max(field === 'adults' ? 1 : 0, r[field] + delta);
+      return {...r, [field]: val};
+    }));
+  };
+
+  const addRoom = () => {
+    if (rooms.length < 4) {
+      setRooms(prev => [...prev, {adults: 1, children: 0}]);
+    }
+  };
+
+  const removeRoom = (idx: number) => {
+    setRooms(prev => prev.filter((_, i) => i !== idx));
+  };
 
   const CounterRow = ({
     title,
@@ -104,12 +124,41 @@ const GuestSelectionModal: React.FC<GuestSelectionModalProps> = ({
       color: colors.textPrimary,
       fontWeight: '600',
     },
-    rowsContainer: {
-      paddingHorizontal: spacing.xl,
+    roomsList: {
+      maxHeight: SCREEN_HEIGHT * 0.5,
+    },
+    roomBlock: {
       backgroundColor: colors.surface,
       marginHorizontal: spacing.xl,
       borderRadius: radius.xl,
       paddingVertical: spacing.md,
+      paddingHorizontal: spacing.xl,
+      marginBottom: spacing.md,
+    },
+    roomHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingTop: spacing.xs,
+      paddingBottom: spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      marginBottom: spacing.xs,
+    },
+    roomTitle: {
+      ...typography.subtitle,
+      fontSize: 15,
+      fontWeight: '700',
+      color: colors.textPrimary,
+    },
+    removeBtn: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 4,
+    },
+    removeText: {
+      ...typography.caption,
+      color: '#EF4444',
+      fontWeight: '600',
     },
     counterRow: {
       flexDirection: 'row',
@@ -178,7 +227,7 @@ const GuestSelectionModal: React.FC<GuestSelectionModalProps> = ({
     applyBtn: {
         backgroundColor: colors.primary,
         marginHorizontal: spacing.xl,
-        marginTop: spacing.xl,
+        marginTop: spacing.md,
         paddingVertical: spacing.lg,
         borderRadius: radius.lg,
         alignItems: 'center',
@@ -187,6 +236,29 @@ const GuestSelectionModal: React.FC<GuestSelectionModalProps> = ({
         color: colors.white,
         fontSize: 16,
         fontWeight: '700',
+    },
+    addRoomBtn: {
+      marginHorizontal: spacing.xl,
+      marginTop: spacing.sm,
+      paddingVertical: spacing.md,
+      borderRadius: radius.lg,
+      borderWidth: 1.5,
+      borderColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'transparent',
+    },
+    addRoomText: {
+      color: colors.primary,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    addRoomDisabled: {
+      opacity: 0.4,
+      borderColor: colors.border,
+    },
+    addRoomDisabledText: {
+      color: colors.textSecondary,
     }
   });
 
@@ -204,36 +276,51 @@ const GuestSelectionModal: React.FC<GuestSelectionModalProps> = ({
                 <View style={styles.handle} />
                 
                 <View style={styles.header}>
-                  <Text style={styles.title}>Guests & Rooms</Text>
+                  <Text style={styles.title}>{t('hotels.roomsAndGuests') || 'Rooms & Guests'}</Text>
                 </View>
 
-                <View style={styles.rowsContainer}>
-                  <CounterRow
-                    title="Adults"
-                    value={adults}
-                    onValueChange={setAdults}
-                    minValue={1}
-                  />
-                  <CounterRow
-                    title="Children"
-                    subtitle="Ages 0-17"
-                    value={children}
-                    onValueChange={setChildren}
-                  />
-                  <CounterRow
-                    title="Rooms"
-                    subtitle="Syria"
-                    value={rooms}
-                    onValueChange={setRooms}
-                    minValue={1}
-                  />
+                <View style={styles.roomsList}>
+                  {rooms.map((room, idx) => (
+                    <View key={idx} style={styles.roomBlock}>
+                      <View style={styles.roomHeader}>
+                        <Text style={styles.roomTitle}>{t('common.room') || 'Room'} {idx + 1}</Text>
+                        {idx > 0 && (
+                          <TouchableOpacity style={styles.removeBtn} onPress={() => removeRoom(idx)}>
+                            <Text style={styles.removeText}>{t('common.remove') || 'Remove'}</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                      <CounterRow
+                        title={t('common.adults') || 'Adults'}
+                        value={room.adults}
+                        onValueChange={(val) => updateRoom(idx, 'adults', val - room.adults)}
+                        minValue={1}
+                      />
+                      <CounterRow
+                        title={t('common.children') || 'Children'}
+                        subtitle="0-17 age"
+                        value={room.children}
+                        onValueChange={(val) => updateRoom(idx, 'children', val - room.children)}
+                      />
+                    </View>
+                  ))}
                 </View>
 
                 <TouchableOpacity 
-                    style={styles.applyBtn}
-                    onPress={() => onApply(adults, children, rooms)}
+                    style={[styles.addRoomBtn, rooms.length >= 4 && styles.addRoomDisabled]}
+                    onPress={addRoom}
+                    disabled={rooms.length >= 4}
                 >
-                    <Text style={styles.applyBtnText}>Apply</Text>
+                    <Text style={[styles.addRoomText, rooms.length >= 4 && styles.addRoomDisabledText]}>
+                      {rooms.length >= 4 ? 'Maximum 4 rooms' : '+ Add new room'}
+                    </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                    style={styles.applyBtn}
+                    onPress={() => onApply(rooms)}
+                >
+                    <Text style={styles.applyBtnText}>{t('common.apply') || 'Apply'}</Text>
                 </TouchableOpacity>
               </SafeAreaView>
             </View>

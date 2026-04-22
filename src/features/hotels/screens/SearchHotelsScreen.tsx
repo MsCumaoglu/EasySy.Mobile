@@ -49,6 +49,10 @@ const SearchHotelsScreen: React.FC = () => {
   const [isGuestModalVisible, setIsGuestModalVisible] = useState(false);
   const [isDatesModalVisible, setIsDatesModalVisible] = useState(false);
 
+  const totalAdults = params.roomsConfig.reduce((sum, r) => sum + r.adults, 0);
+  const totalChildren = params.roomsConfig.reduce((sum, r) => sum + r.children, 0);
+  const totalRooms = params.roomsConfig.length;
+
   const handleSearch = () => {
     navigation.navigate('HotelResults');
   };
@@ -296,9 +300,9 @@ const SearchHotelsScreen: React.FC = () => {
           >
             <Icon name="person-outline" style={styles.fieldIcon} color={colors.textSecondary} />
             <Text style={styles.valueText}>
-              {params.guests} {params.guests === 1 ? t('common.adult') : t('common.adults')}
-              {params.children > 0 ? `, ${params.children} ${params.children === 1 ? t('common.child') : t('common.children')}` : ''}
-              {`, ${params.rooms} ${params.rooms === 1 ? t('common.room') : t('common.rooms')}`}
+              {totalAdults} {totalAdults === 1 ? t('common.adult') : t('common.adults')}
+              {totalChildren > 0 ? `, ${totalChildren} ${totalChildren === 1 ? t('common.child') : t('common.children')}` : ''}
+              {`, ${totalRooms} ${totalRooms === 1 ? t('common.room') : t('common.rooms')}`}
             </Text>
           </TouchableOpacity>
 
@@ -340,18 +344,14 @@ const SearchHotelsScreen: React.FC = () => {
       <GuestSelectionModal
         isVisible={isGuestModalVisible}
         onClose={() => setIsGuestModalVisible(false)}
-        onApply={(adults, children, rooms) => {
+        onApply={(roomsConfig) => {
           setParams(p => ({
             ...p,
-            guests: adults,
-            children: children,
-            rooms: rooms,
+            roomsConfig: roomsConfig,
           }));
           setIsGuestModalVisible(false);
         }}
-        initialAdults={params.guests}
-        initialChildren={params.children}
-        initialRooms={params.rooms}
+        initialRoomsConfig={params.roomsConfig}
       />
 
       <SelectDatesModal
