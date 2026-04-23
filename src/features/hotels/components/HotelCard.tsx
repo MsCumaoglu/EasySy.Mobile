@@ -10,6 +10,7 @@ import {
 import {useTheme} from '../../../app/providers/ThemeProvider';
 import {Hotel} from '../models/Hotel';
 import Icon from 'react-native-vector-icons/Ionicons';
+import {useCurrency} from '../../../core/hooks/useCurrency';
 
 interface HotelCardProps {
   hotel: Hotel;
@@ -30,6 +31,7 @@ const AMENITY_ICONS: Record<string, string> = {
 
 const HotelCard: React.FC<HotelCardProps> = ({hotel, onPress, style}) => {
   const {colors, spacing, radius, typography} = useTheme();
+  const {formatPrice} = useCurrency();
   const [liked, setLiked] = useState(false);
 
   const displayAmenities = hotel.amenities.slice(0, 4);
@@ -222,7 +224,7 @@ const HotelCard: React.FC<HotelCardProps> = ({hotel, onPress, style}) => {
           <Text style={styles.name}>{hotel.name}</Text>
           <View style={styles.pricePill}>
             <Text style={styles.priceText}>
-              {hotel.priceMin}$ - {hotel.priceMax}$
+              {formatPrice(hotel.priceMin)}
             </Text>
           </View>
         </View>

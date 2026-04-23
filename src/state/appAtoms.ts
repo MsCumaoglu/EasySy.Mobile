@@ -3,7 +3,7 @@ import { storageService } from '../core/storage/storage';
 
 export type AppTheme = 'light' | 'dark' | 'system';
 export type AppLanguage = 'en' | 'tr' | 'ar';
-export type AppCurrency = 'USD' | 'EUR' | 'TRY';
+export type AppCurrency = 'USD' | 'EUR' | 'TRY' | 'SYP';
 
 // Create a SyncStorage wrapper around MMKV for Jotai
 const mmkvJotaiStorage = {

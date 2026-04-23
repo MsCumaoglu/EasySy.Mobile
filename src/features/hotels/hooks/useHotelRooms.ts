@@ -10,43 +10,30 @@
 
 import {useQuery} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
-import {hotelService} from '../../../core/api/services/hotelService';
-import {Room, RoomApiResponse} from '../models/Room';
+import {useAtomValue} from 'jotai';
+import {hotelService, RoomCombinationItem} from '../../../core/api/services/hotelService';
+import {hotelSearchParamsAtom} from '../state/hotelAtoms';
 
-function mapApiRoom(item: RoomApiResponse, lang: string): Room {
-  const isAr = lang === 'ar';
-  return {
-    id: item.id,
-    hotelId: item.hotelId,
-    name: isAr ? (item.nameAr || item.nameEn) : (item.nameEn || item.nameAr),
-    nameAr: item.nameAr,
-    nameEn: item.nameEn,
-    roomType: item.roomType,
-    bedType: item.bedType,
-    bedCount: item.bedCount,
-    maxAdults: item.maxAdults,
-    maxChildren: item.maxChildren,
-    roomSizeSqm: item.roomSizeSqm,
-    basePriceSyp: item.basePriceSyp,
-    quantity: item.quantity,
-    viewType: item.viewType,
-    hasPrivateBathroom: item.hasPrivateBathroom,
-    hasBalcony: item.hasBalcony,
-    hasAirConditioning: item.hasAirConditioning,
-    isActive: item.isActive,
-  };
-}
-
-export function useHotelRooms(hotelId: string) {
+export function useHotelRoomCombinations(hotelId: string) {
   const {i18n} = useTranslation();
+  const searchParams = useAtomValue(hotelSearchParamsAtom);
 
-  return useQuery<Room[]>({
-    queryKey: ['hotels', 'rooms', hotelId, i18n.language] as const,
+  // Format roomsConfig into "Adults:Children,Adults:Children"
+  const roomsQueryString = searchParams.roomsConfig
+    .map(r => `${r.adults}:${r.children}`)
+    .join(',');
+
+  return useQuery<RoomCombinationItem[]>({
+    queryKey: ['hotels', 'combinations', hotelId, roomsQueryString, searchParams.checkIn, searchParams.checkOut, i18n.language] as const,
     queryFn: async () => {
-      const raw = await hotelService.getRooms(hotelId);
-      return raw.map(item => mapApiRoom(item, i18n.language));
+      const response = await hotelService.getRoomCombinations(hotelId, {
+        rooms: roomsQueryString,
+        checkIn: searchParams.checkIn,
+        checkOut: searchParams.checkOut,
+      });
+      return response.combinations || [];
     },
-    staleTime: 30 * 60 * 1000, // 30 minutes
-    enabled: !!hotelId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !!hotelId && !!roomsQueryString,
   });
 }

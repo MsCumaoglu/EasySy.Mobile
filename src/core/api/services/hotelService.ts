@@ -31,6 +31,21 @@ export interface HotelSearchParams {
 // Real API response types (matching backend contract)
 // ---------------------------------------------------------------------------
 
+export interface HotelSearchRoomItem {
+  roomId: string;
+  roomType: string;
+  bedType: string;
+  viewType: string;
+  maxAdults: number;
+  maxChildren: number;
+  assignedAdults: number;
+  assignedChildren: number;
+  pricePerNight: number;
+  hasPrivateBathroom: boolean;
+  hasBalcony: boolean;
+  hasAirConditioning: boolean;
+}
+
 /** One hotel item returned inside `content[]` */
 export interface HotelSearchResultItem {
   id: string;
@@ -42,7 +57,8 @@ export interface HotelSearchResultItem {
   avgRating: number;       // 0-5
   totalReviews: number;
   primaryImageUrl: string;
-  pricePerNight: number;   // in local currency (SYP)
+  minTotalPrice: number;   // in local currency (SYP), was pricePerNight
+  rooms?: HotelSearchRoomItem[];
   status: string;          // 'DRAFT' | 'ACTIVE' | ...
   amenities: string[];     // e.g. ['free_wifi', 'swimming_pool', 'restaurant']
 }
@@ -124,6 +140,21 @@ export interface HotelDetailResponse {
 }
 
 // ---------------------------------------------------------------------------
+// Room Combinations response types
+// ---------------------------------------------------------------------------
+
+export interface RoomCombinationItem {
+  totalPrice: number;
+  rooms: HotelSearchRoomItem[];
+}
+
+export interface RoomCombinationsResponse {
+  hotelId: string;
+  requestedRooms: { adults: number; children: number }[];
+  combinations: RoomCombinationItem[];
+}
+
+// ---------------------------------------------------------------------------
 // Review endpoint response types (matching /api/v1/hotels/{id}/reviews contract)
 // ---------------------------------------------------------------------------
 
@@ -188,11 +219,28 @@ export const hotelService = {
   },
 
   /**
-   * GET /api/v1/hotels/{hotelId}/rooms
-   * Returns the list of rooms for a specific hotel.
+   * GET /api/v1/hotels/{hotelId}/combinations
+   * Returns all valid room combinations for a hotel given guest requirements.
    */
-  getRooms: async (hotelId: string): Promise<RoomApiResponse[]> => {
-    return apiClient.get(ENDPOINTS.HOTELS.ROOMS(hotelId));
+  getRoomCombinations: async (
+    hotelId: string,
+    params: {
+      rooms: string;
+      checkIn?: string | null;
+      checkOut?: string | null;
+      maxCombinations?: number;
+    }
+  ): Promise<RoomCombinationsResponse> => {
+    // Clean params
+    const cleanParams: Record<string, any> = { rooms: params.rooms };
+    if (params.checkIn) cleanParams.checkIn = params.checkIn;
+    if (params.checkOut) cleanParams.checkOut = params.checkOut;
+    if (params.maxCombinations) cleanParams.maxCombinations = params.maxCombinations;
+
+    return apiClient.get(
+      `${ENDPOINTS.HOTELS.DETAIL(hotelId)}/combinations`,
+      { params: cleanParams }
+    );
   },
 
   /**

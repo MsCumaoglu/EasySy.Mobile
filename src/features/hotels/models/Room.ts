@@ -1,8 +1,8 @@
 /**
  * Room Model — Represents a hotel room from the API.
  *
- * The API returns rooms with bilingual names (nameAr, nameEn).
- * Localization is handled at the repository/hook layer.
+ * The API returns rooms with a single localized `name` (driven by Accept-Language).
+ * Localization is handled automatically by the backend.
  */
 
 export type RoomType = 'SINGLE' | 'DOUBLE' | 'TRIPLE' | 'QUAD' | 'SUITE' | 'FAMILY' | 'STUDIO';
@@ -12,8 +12,7 @@ export type ViewType = 'CITY_VIEW' | 'SEA_VIEW' | 'GARDEN_VIEW' | 'POOL_VIEW' | 
 export interface RoomApiResponse {
   id: string;
   hotelId: string;
-  nameAr: string;
-  nameEn: string;
+  name: string;
   roomType: RoomType;
   bedType: BedType;
   bedCount: number;
@@ -36,8 +35,6 @@ export interface Room {
   id: string;
   hotelId: string;
   name: string;
-  nameAr: string;
-  nameEn: string;
   roomType: RoomType;
   bedType: BedType;
   bedCount: number;

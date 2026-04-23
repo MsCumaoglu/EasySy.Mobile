@@ -15,14 +15,14 @@ import {useAtom} from 'jotai';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {HotelStackParamList} from '../../../app/navigation/types';
 import {useTheme} from '../../../app/providers/ThemeProvider';
-import {useHotelRooms} from '../hooks/useHotelRooms';
+import {useHotelRoomCombinations} from '../hooks/useHotelRooms';
 import {hotelSearchParamsAtom} from '../state/hotelAtoms';
 import Loader from '../../../shared/components/Loader';
 import PrimaryButton from '../../../shared/components/PrimaryButton';
-import {Room} from '../models/Room';
+import {RoomCombinationItem} from '../../../core/api/services/hotelService';
 import SelectDatesModal from '../components/SelectDatesModal';
 import GuestSelectionModal from '../components/GuestSelectionModal';
-import {formatCurrency} from '../../../core/utils/format';
+import {useCurrency} from '../../../core/hooks/useCurrency';
 
 type HotelRoomsNavProp = NativeStackNavigationProp<HotelStackParamList, 'HotelRooms'>;
 type HotelRoomsRouteProp = RouteProp<HotelStackParamList, 'HotelRooms'>;
@@ -35,7 +35,12 @@ export default function HotelRoomsScreen() {
   const {colors, spacing, radius, typography} = useTheme();
 
   const [searchParams, setSearchParams] = useAtom(hotelSearchParamsAtom);
-  const {data: rooms, isLoading, isFetching} = useHotelRooms(hotelId);
+  const {data: combinations, isLoading, isFetching} = useHotelRoomCombinations(hotelId);
+  const {formatPrice} = useCurrency();
+
+  const totalAdults = searchParams.roomsConfig.reduce((sum, r) => sum + r.adults, 0);
+  const totalChildren = searchParams.roomsConfig.reduce((sum, r) => sum + r.children, 0);
+  const totalRooms = searchParams.roomsConfig.length;
 
   const [isDatesModalVisible, setDatesModalVisible] = useState(false);
   const [isGuestsModalVisible, setGuestsModalVisible] = useState(false);
@@ -43,84 +48,71 @@ export default function HotelRoomsScreen() {
   const checkInDisplay = searchParams.checkIn ? searchParams.checkIn : t('hotels.checkIn');
   const checkOutDisplay = searchParams.checkOut ? searchParams.checkOut : t('hotels.checkOut');
 
-  const renderRoom = ({item}: {item: Room}) => {
-    // Calculate required capacity per room
-    const requiredRooms = searchParams.rooms || 1;
-    const requiredAdultsPerRoom = Math.ceil((searchParams.guests || 1) / requiredRooms);
-    const requiredChildrenPerRoom = Math.ceil((searchParams.children || 0) / requiredRooms);
-
-    const isAvailable = 
-      item.quantity >= requiredRooms &&
-      item.maxAdults >= requiredAdultsPerRoom &&
-      item.maxChildren >= requiredChildrenPerRoom;
-
+  const renderCombination = ({item, index}: {item: RoomCombinationItem; index: number}) => {
     return (
       <View style={styles.roomCard}>
         <View style={styles.roomHeader}>
           <View style={{flex: 1}}>
-            <Text style={styles.roomName}>{item.name}</Text>
+            <Text style={styles.roomName}>{t('hotels.option', {defaultValue: 'Option'})} {index + 1}</Text>
             <Text style={styles.roomPrice}>
-              {formatCurrency(item.basePriceSyp)} <Text style={styles.perNight}>{t('common.perNight')}</Text>
-            </Text>
-          </View>
-          <View style={[styles.availabilityBadge, {backgroundColor: isAvailable ? '#C6F6D5' : '#FED7D7'}]}>
-            <Text style={[styles.availabilityText, {color: isAvailable ? '#22543D' : '#822727'}]}>
-              {isAvailable ? t('common.available') || 'Available' : t('common.notAvailable') || 'Not Available'}
+              {formatPrice(item.totalPrice)} <Text style={styles.perNight}>{t('hotels.totalPrice', {defaultValue: 'Total'})}</Text>
             </Text>
           </View>
         </View>
 
         <View style={styles.roomDetailScroll}>
-          <View style={styles.detailGrid}>
-            <View style={styles.detailItem}>
-              <Icon name="resize-outline" style={styles.detailIcon} />
-              <Text style={styles.detailText}>{item.roomSizeSqm} m²</Text>
+          {item.rooms.map((room, rIdx) => (
+            <View key={room.roomId + rIdx} style={{marginBottom: 12, paddingBottom: 12, borderBottomWidth: rIdx < item.rooms.length - 1 ? StyleSheet.hairlineWidth : 0, borderBottomColor: colors.border}}>
+              <Text style={{...typography.subtitle, fontSize: 14, fontWeight: '700', color: colors.textPrimary, marginBottom: 6}}>
+                {t(`common.${room.roomType.toLowerCase()}`, {defaultValue: room.roomType.replace('_', ' ')})} Room
+              </Text>
+              
+              <View style={styles.detailGrid}>
+                <View style={styles.detailItem}>
+                  <Icon name="bed-outline" style={styles.detailIcon} />
+                  <Text style={styles.detailText}>{t(`common.${room.bedType.toLowerCase()}`, {defaultValue: room.bedType.replace('_', ' ')})}</Text>
+                </View>
+                <View style={styles.detailItem}>
+                  <Icon name="eye-outline" style={styles.detailIcon} />
+                  <Text style={styles.detailText}>{t(`common.${room.viewType.toLowerCase()}`, {defaultValue: room.viewType.replace('_', ' ')})}</Text>
+                </View>
+                <View style={styles.detailItem}>
+                  <Icon name="people-outline" style={styles.detailIcon} />
+                  <Text style={styles.detailText}>{room.assignedAdults} {t('common.adults', {defaultValue: 'Adults'})} {room.assignedChildren > 0 ? `& ${room.assignedChildren} ${t('common.children', {defaultValue: 'Children'})}` : ''}</Text>
+                </View>
+              </View>
+              
+              <View style={styles.roomFeatures}>
+                {room.hasPrivateBathroom && (
+                  <View style={styles.featureTag}>
+                    <Icon name="water-outline" size={14} color={colors.primary} />
+                    <Text style={styles.featureText}>Private Bath</Text>
+                  </View>
+                )}
+                {room.hasAirConditioning && (
+                  <View style={styles.featureTag}>
+                    <Icon name="snow-outline" size={14} color={colors.primary} />
+                    <Text style={styles.featureText}>AC</Text>
+                  </View>
+                )}
+                {room.hasBalcony && (
+                  <View style={styles.featureTag}>
+                    <Icon name="storefront-outline" size={14} color={colors.primary} />
+                    <Text style={styles.featureText}>Balcony</Text>
+                  </View>
+                )}
+              </View>
             </View>
-            <View style={styles.detailItem}>
-              <Icon name="bed-outline" style={styles.detailIcon} />
-              <Text style={styles.detailText}>{t(`common.${item.bedType.toLowerCase()}`) || item.bedType.replace('_', ' ')}</Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Icon name="eye-outline" style={styles.detailIcon} />
-              <Text style={styles.detailText}>{t(`common.${item.viewType.toLowerCase()}`) || item.viewType.replace('_', ' ')}</Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Icon name="people-outline" style={styles.detailIcon} />
-              <Text style={styles.detailText}>{item.maxAdults} {t('common.adults')} & {item.maxChildren} {t('common.children')}</Text>
-            </View>
-          </View>
-          
-          <View style={styles.roomFeatures}>
-             {item.hasPrivateBathroom && (
-               <View style={styles.featureTag}>
-                 <Icon name="water-outline" size={14} color={colors.primary} />
-                 <Text style={styles.featureText}>Private Bath</Text>
-               </View>
-             )}
-             {item.hasAirConditioning && (
-               <View style={styles.featureTag}>
-                 <Icon name="snow-outline" size={14} color={colors.primary} />
-                 <Text style={styles.featureText}>AC</Text>
-               </View>
-             )}
-             {item.hasBalcony && (
-               <View style={styles.featureTag}>
-                 <Icon name=" storefront-outline" size={14} color={colors.primary} />
-                 <Text style={styles.featureText}>Balcony</Text>
-               </View>
-             )}
-          </View>
+          ))}
         </View>
 
-        {isAvailable && (
-          <View style={styles.bookNowContainer}>
-            <PrimaryButton
-              label={t('common.bookNow') || 'Book Now'}
-              onPress={() => {}} // Booking flow will be added later
-              style={styles.bookNowBtn}
-            />
-          </View>
-        )}
+        <View style={styles.bookNowContainer}>
+          <PrimaryButton
+            label={t('common.bookNow') || 'Book Now'}
+            onPress={() => {}} // Booking flow will be added later
+            style={styles.bookNowBtn}
+          />
+        </View>
       </View>
     );
   };
@@ -322,7 +314,7 @@ export default function HotelRoomsScreen() {
         
         <TouchableOpacity style={styles.pillItem} onPress={() => setGuestsModalVisible(true)}>
           <Icon name="person-outline" style={styles.pillIcon} />
-          <Text style={styles.pillText} numberOfLines={1}>{searchParams.guests} {t('common.adults') || 'Adults'} & {searchParams.children} {t('common.children') || 'Children'}</Text>
+          <Text style={styles.pillText} numberOfLines={1}>{totalAdults} {t('common.adults') || 'Adults'} & {totalChildren} {t('common.children') || 'Children'}</Text>
         </TouchableOpacity>
       </View>
 
@@ -333,9 +325,9 @@ export default function HotelRoomsScreen() {
         <Loader />
       ) : (
         <FlatList
-          data={rooms}
-          keyExtractor={(item) => item.id}
-          renderItem={renderRoom}
+          data={combinations}
+          keyExtractor={(_, index) => index.toString()}
+          renderItem={renderCombination}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
         />
@@ -355,13 +347,11 @@ export default function HotelRoomsScreen() {
       <GuestSelectionModal 
         isVisible={isGuestsModalVisible} 
         onClose={() => setGuestsModalVisible(false)} 
-        onApply={(adults, children, rooms) => {
-          setSearchParams(prev => ({...prev, guests: adults, children, rooms}));
+        onApply={(roomsConfig) => {
+          setSearchParams(prev => ({...prev, roomsConfig}));
           setGuestsModalVisible(false);
         }}
-        initialAdults={searchParams.guests}
-        initialChildren={searchParams.children}
-        initialRooms={searchParams.rooms}
+        initialRoomsConfig={searchParams.roomsConfig}
       />
     </SafeAreaView>
   );

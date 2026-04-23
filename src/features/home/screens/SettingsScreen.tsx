@@ -48,6 +48,7 @@ const CURRENCIES: CurrencyOption[] = [
   {code: 'USD', label: 'US Dollar', symbol: '$'},
   {code: 'EUR', label: 'Euro', symbol: '€'},
   {code: 'TRY', label: 'Turkish Lira', symbol: '₺'},
+  {code: 'SYP', label: 'Syrian Pound', symbol: 'SYP'},
 ];
 
 const SettingsScreen: React.FC = () => {
