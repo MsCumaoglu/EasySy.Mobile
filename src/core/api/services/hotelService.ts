@@ -214,7 +214,7 @@ export const hotelService = {
    * GET /api/v1/hotels/search/locations
    * Returns a list of available cities and their hotel counts.
    */
-  getLocations: async (): Promise<any[]> => {
+  getLocations: async (): Promise<{id: string, name: string, country: string, hotelCount: number}[]> => {
     return apiClient.get(ENDPOINTS.HOTELS.LOCATIONS);
   },
 

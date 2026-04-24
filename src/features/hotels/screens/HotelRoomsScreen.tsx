@@ -49,56 +49,73 @@ export default function HotelRoomsScreen() {
   const checkOutDisplay = searchParams.checkOut ? searchParams.checkOut : t('hotels.checkOut');
 
   const renderCombination = ({item, index}: {item: RoomCombinationItem; index: number}) => {
+    // Generate a combination title, e.g. "Suit + Standard"
+    const combinationTitle = item.rooms
+      .map(r => t(`common.${r.roomType.toLowerCase()}`, {defaultValue: r.roomType.replace(/_/g, ' ')}))
+      .join(' + ');
+
     return (
       <View style={styles.roomCard}>
+        {/* Header */}
         <View style={styles.roomHeader}>
-          <View style={{flex: 1}}>
-            <Text style={styles.roomName}>{t('hotels.option', {defaultValue: 'Option'})} {index + 1}</Text>
-            <Text style={styles.roomPrice}>
-              {formatPrice(item.totalPrice)} <Text style={styles.perNight}>{t('hotels.totalPrice', {defaultValue: 'Total'})}</Text>
-            </Text>
+          <Text style={styles.roomName}>{combinationTitle} Room</Text>
+          <View style={styles.pricePill}>
+            <Text style={styles.pricePillText}>{formatPrice(item.totalPrice)} {t('hotels.total', {defaultValue: 'Total'})}</Text>
           </View>
         </View>
 
+        <View style={styles.divider} />
+
+        {/* Room Details */}
         <View style={styles.roomDetailScroll}>
           {item.rooms.map((room, rIdx) => (
-            <View key={room.roomId + rIdx} style={{marginBottom: 12, paddingBottom: 12, borderBottomWidth: rIdx < item.rooms.length - 1 ? StyleSheet.hairlineWidth : 0, borderBottomColor: colors.border}}>
-              <Text style={{...typography.subtitle, fontSize: 14, fontWeight: '700', color: colors.textPrimary, marginBottom: 6}}>
-                {t(`common.${room.roomType.toLowerCase()}`, {defaultValue: room.roomType.replace('_', ' ')})} Room
-              </Text>
-              
-              <View style={styles.detailGrid}>
-                <View style={styles.detailItem}>
-                  <Icon name="bed-outline" style={styles.detailIcon} />
-                  <Text style={styles.detailText}>{t(`common.${room.bedType.toLowerCase()}`, {defaultValue: room.bedType.replace('_', ' ')})}</Text>
+            <View key={room.roomId + rIdx} style={{marginBottom: rIdx < item.rooms.length - 1 ? 16 : 0}}>
+              {/* Row 1: Max Adults & Children */}
+              <View style={styles.detailRow}>
+                <View style={styles.detailItemRow}>
+                  <Icon name="person" style={styles.iconOrange} />
+                  <Text style={styles.detailTextBlack}>Max Adult Capacity {room.maxAdults}</Text>
                 </View>
-                <View style={styles.detailItem}>
-                  <Icon name="eye-outline" style={styles.detailIcon} />
-                  <Text style={styles.detailText}>{t(`common.${room.viewType.toLowerCase()}`, {defaultValue: room.viewType.replace('_', ' ')})}</Text>
-                </View>
-                <View style={styles.detailItem}>
-                  <Icon name="people-outline" style={styles.detailIcon} />
-                  <Text style={styles.detailText}>{room.assignedAdults} {t('common.adults', {defaultValue: 'Adults'})} {room.assignedChildren > 0 ? `& ${room.assignedChildren} ${t('common.children', {defaultValue: 'Children'})}` : ''}</Text>
+                <View style={styles.detailItemRow}>
+                  <Icon name="happy" style={styles.iconOrange} />
+                  <Text style={styles.detailTextBlack}>Max Children Capacity {room.maxChildren}</Text>
                 </View>
               </View>
-              
-              <View style={styles.roomFeatures}>
+
+              {/* Row 2: Bed & View */}
+              <View style={styles.detailRow}>
+                <View style={styles.detailItemRow}>
+                  <Icon name="bed" style={styles.iconBlack} />
+                  <Text style={styles.detailTextBlack}>
+                    {t(`common.${room.bedType.toLowerCase()}`, {defaultValue: room.bedType.replace(/_/g, ' ')})}
+                  </Text>
+                </View>
+                <View style={styles.detailItemRow}>
+                  <Icon name="eye" style={styles.iconBlack} />
+                  <Text style={styles.detailTextBlack}>
+                    {t(`common.${room.viewType.toLowerCase()}`, {defaultValue: room.viewType.replace(/_/g, ' ')})}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Row 3: Amenities */}
+              <View style={styles.amenitiesRow}>
                 {room.hasPrivateBathroom && (
-                  <View style={styles.featureTag}>
-                    <Icon name="water-outline" size={14} color={colors.primary} />
-                    <Text style={styles.featureText}>Private Bath</Text>
+                  <View style={styles.amenityPill}>
+                    <Icon name="water-outline" style={styles.amenityIconOrange} />
+                    <Text style={styles.amenityText}>Private Bath</Text>
                   </View>
                 )}
                 {room.hasAirConditioning && (
-                  <View style={styles.featureTag}>
-                    <Icon name="snow-outline" size={14} color={colors.primary} />
-                    <Text style={styles.featureText}>AC</Text>
+                  <View style={styles.amenityPill}>
+                    <Icon name="snow-outline" style={styles.amenityIconOrange} />
+                    <Text style={styles.amenityText}>AC</Text>
                   </View>
                 )}
                 {room.hasBalcony && (
-                  <View style={styles.featureTag}>
-                    <Icon name="storefront-outline" size={14} color={colors.primary} />
-                    <Text style={styles.featureText}>Balcony</Text>
+                  <View style={styles.amenityPill}>
+                    <Icon name="storefront-outline" style={styles.amenityIconOrange} />
+                    <Text style={styles.amenityText}>Balcony</Text>
                   </View>
                 )}
               </View>
@@ -106,12 +123,17 @@ export default function HotelRoomsScreen() {
           ))}
         </View>
 
-        <View style={styles.bookNowContainer}>
-          <PrimaryButton
-            label={t('common.bookNow') || 'Book Now'}
-            onPress={() => {}} // Booking flow will be added later
-            style={styles.bookNowBtn}
-          />
+        <View style={styles.divider} />
+
+        {/* Footer Actions */}
+        <View style={styles.footerRow}>
+          <TouchableOpacity style={styles.bookBtn} onPress={() => {}}>
+            <Text style={styles.bookBtnText}>{t('common.bookNow', {defaultValue: 'Book Now'})}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.whatsappBtn} onPress={() => {}}>
+            <Icon name="logo-whatsapp" style={styles.whatsappIcon} />
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -188,13 +210,13 @@ export default function HotelRoomsScreen() {
       paddingBottom: spacing.xl,
     },
     roomCard: {
-      backgroundColor: colors.card,
-      borderRadius: radius.xl,
+      backgroundColor: '#FFFFFF',
+      borderRadius: 16,
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: '#E5E7EB',
       padding: spacing.lg,
       marginBottom: spacing.md,
-      shadowColor: colors.shadow,
+      shadowColor: '#000',
       shadowOffset: {width: 0, height: 2},
       shadowOpacity: 0.05,
       shadowRadius: 8,
@@ -203,91 +225,112 @@ export default function HotelRoomsScreen() {
     roomHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      marginBottom: spacing.lg,
+      alignItems: 'center',
     },
     roomName: {
       ...typography.subtitle,
-      color: colors.textPrimary,
-      fontWeight: '700',
+      color: '#000000',
+      fontWeight: '800',
+      fontSize: 18,
       flex: 1,
       marginRight: spacing.sm,
     },
-    roomPrice: {
-      ...typography.body,
-      color: colors.primary,
-      fontWeight: '700',
-      marginTop: 2,
+    pricePill: {
+      backgroundColor: '#E5E7EB',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 20,
     },
-    perNight: {
-      ...typography.caption,
-      color: colors.textSecondary,
-      fontWeight: '400',
-    },
-    availabilityBadge: {
-      paddingHorizontal: spacing.sm,
-      paddingVertical: 4,
-      borderRadius: radius.full,
-    },
-    availabilityText: {
-      ...typography.caption,
+    pricePillText: {
+      fontSize: 14,
       fontWeight: '600',
+      color: '#1F2937',
+    },
+    divider: {
+      height: 1,
+      backgroundColor: '#E5E7EB',
+      marginVertical: 16,
     },
     roomDetailScroll: {
-      paddingVertical: spacing.md,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: colors.border,
+      paddingVertical: 4,
     },
-    detailGrid: {
+    detailRow: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: spacing.md,
-      marginBottom: spacing.md,
+      justifyContent: 'space-between',
+      marginBottom: 16,
     },
-    detailItem: {
+    detailItemRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      width: '45%',
+      width: '48%',
+      gap: 8,
+    },
+    iconOrange: {
+      fontSize: 20,
+      color: colors.primary, // Orange from theme
+    },
+    iconBlack: {
+      fontSize: 20,
+      color: '#000000',
+    },
+    detailTextBlack: {
+      ...typography.body,
+      color: '#000000',
+      fontSize: 14,
+      fontWeight: '500',
+    },
+    amenitiesRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+    },
+    amenityPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#F3F4F6',
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 8,
       gap: 6,
     },
-    detailIcon: {
-      fontSize: 16,
-      color: colors.textSecondary,
+    amenityIconOrange: {
+      fontSize: 18,
+      color: colors.primary,
     },
-    detailText: {
-      ...typography.caption,
-      color: colors.textPrimary,
-      fontSize: 12,
+    amenityText: {
+      fontSize: 14,
+      fontWeight: '500',
+      color: '#1F2937',
     },
-    roomFeatures: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: spacing.sm,
-    },
-    featureTag: {
+    footerRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: colors.surface,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: radius.sm,
-      borderWidth: 1,
-      borderColor: colors.border,
-      gap: 4,
+      gap: 12,
     },
-    featureText: {
-      ...typography.caption,
-      fontSize: 10,
-      color: colors.textSecondary,
+    bookBtn: {
+      flex: 1,
+      backgroundColor: colors.primary,
+      paddingVertical: 14,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
-    bookNowContainer: {
-      marginTop: spacing.md,
-      paddingTop: spacing.md,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: colors.border,
+    bookBtnText: {
+      color: '#FFFFFF',
+      fontSize: 16,
+      fontWeight: '700',
     },
-    bookNowBtn: {
-      width: '100%',
+    whatsappBtn: {
+      width: 52,
+      height: 52,
+      backgroundColor: '#25D366',
+      borderRadius: 26,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    whatsappIcon: {
+      fontSize: 28,
+      color: '#FFFFFF',
     },
   });
 
