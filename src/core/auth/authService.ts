@@ -2,7 +2,7 @@ import auth from '@react-native-firebase/auth';
 import {GoogleSignin, statusCodes} from '@react-native-google-signin/google-signin';
 
 GoogleSignin.configure({
-  webClientId: '1011921763198-8dbki9j753dv181m8c7he70sofr31n8q.apps.googleusercontent.com', // From Firebase Console Web Client ID
+  webClientId: '1030948704390-782kvho2mb36n74a66j52cpi5gemcc44.apps.googleusercontent.com', // From Firebase Console Web Client ID
 });
 
 export const authService = {
