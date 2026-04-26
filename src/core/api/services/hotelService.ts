@@ -128,6 +128,7 @@ export interface HotelDetailResponse {
   email?: string;
   checkInTime?: string;
   checkOutTime?: string;
+  isAvailableForBooking?: boolean;
   status: string;
   isFeatured?: boolean;
   avgRating: number;
@@ -150,6 +151,9 @@ export interface RoomCombinationItem {
 
 export interface RoomCombinationsResponse {
   hotelId: string;
+  isAvailableForBooking?: boolean;
+  phone?: string;
+  whatsapp?: string;
   requestedRooms: { adults: number; children: number }[];
   combinations: RoomCombinationItem[];
 }

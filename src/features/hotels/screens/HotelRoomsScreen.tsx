@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StatusBar,
   Dimensions,
+  Linking,
 } from 'react-native';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
@@ -184,11 +185,24 @@ export default function HotelRoomsScreen() {
 
         {/* Footer Actions */}
         <View style={styles.footerRow}>
-          <TouchableOpacity style={styles.bookBtn} onPress={() => {}}>
-            <Text style={styles.bookBtnText}>{t('common.bookNow', {defaultValue: 'Book Now'})}</Text>
-          </TouchableOpacity>
+          {combinations?.isAvailableForBooking !== false && (
+            <TouchableOpacity style={styles.bookBtn} onPress={() => {}}>
+              <Text style={styles.bookBtnText}>{t('common.bookNow', {defaultValue: 'Book Now'})}</Text>
+            </TouchableOpacity>
+          )}
 
-          <TouchableOpacity style={styles.whatsappBtn} onPress={() => {}}>
+          <TouchableOpacity 
+            style={[styles.whatsappBtn, combinations?.isAvailableForBooking === false && {flex: 1}]} 
+            onPress={() => {
+              const whatsappNum = combinations?.whatsapp || '';
+              if (whatsappNum) {
+                Linking.openURL(`whatsapp://send?phone=${whatsappNum.replace(/\+/g, '')}`);
+              }
+            }}
+          >
+            {combinations?.isAvailableForBooking === false && (
+              <Text style={[styles.bookBtnText, {marginRight: 8}]}>WhatsApp</Text>
+            )}
             <Icon name="logo-whatsapp" style={styles.whatsappIcon} />
           </TouchableOpacity>
         </View>
@@ -488,7 +502,7 @@ export default function HotelRoomsScreen() {
         <Loader />
       ) : (
         <FlatList
-          data={combinations}
+          data={combinations?.combinations}
           keyExtractor={(_, index) => index.toString()}
           renderItem={({item, index}) => <CombinationCard item={item} index={index} />}
           contentContainerStyle={styles.listContent}
