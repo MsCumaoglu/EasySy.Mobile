@@ -55,7 +55,8 @@
     "garden_view": "Garden View",
     "pool_view": "Pool View",
     "mountain_view": "Mountain View",
-    "no_view": "No View"
+    "no_view": "No View",
+    "remove": "Remove"
   },
   "home": {
     "slogan": "Travel and Explore",
@@ -134,7 +135,8 @@
       "priceDesc": "Price: High to Low",
       "ratingDesc": "Highest Rated",
       "nameAsc": "Name: A–Z"
-    }
+    },
+    "roomsAndGuests": "Rooms & Guests"
   },
   "bus": {
     "searchTitle": "Search Bus Travel",

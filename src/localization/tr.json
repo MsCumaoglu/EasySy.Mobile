@@ -55,7 +55,8 @@
     "garden_view": "Bahçe Manzarası",
     "pool_view": "Havuz Manzarası",
     "mountain_view": "Dağ Manzarası",
-    "no_view": "Manzarasız"
+    "no_view": "Manzarasız",
+    "remove": "Kaldır"
   },
   "home": {
     "slogan": "Seyahat et ve Keşfet",
@@ -132,7 +133,8 @@
       "priceDesc": "Fiyat: Yüksekten Düşüğe",
       "ratingDesc": "En Yüksek Puan",
       "nameAsc": "İsim: A'dan Z'ye"
-    }
+    },
+    "roomsAndGuests": "Odalar ve Kişiler"
   },
   "bus": {
     "searchTitle": "Otobüs Ara",
