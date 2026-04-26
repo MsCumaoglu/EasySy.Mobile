@@ -1,16 +1,17 @@
 import auth from '@react-native-firebase/auth';
-import {GoogleSignin, statusCodes} from '@react-native-google-signin/google-signin';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 
 GoogleSignin.configure({
   webClientId: '1030948704390-782kvho2mb36n74a66j52cpi5gemcc44.apps.googleusercontent.com', // From Firebase Console Web Client ID
+  iosClientId: '1030948704390-cv9tmanu01iisnla9lq3rqse7d6gtf9d.apps.googleusercontent.com', // From GoogleService-Info.plist CLIENT_ID
 });
 
 export const authService = {
   signInWithGoogle: async () => {
     try {
       // Check if your device supports Google Play
-      await GoogleSignin.hasPlayServices({showPlayServicesUpdateDialog: true});
-      
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+
       // Get the users ID token
       const signInResult = await GoogleSignin.signIn();
       const idToken = signInResult.data?.idToken;
