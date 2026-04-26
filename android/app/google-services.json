@@ -1,34 +1,49 @@
 {
   "project_info": {
-    "project_number": "1011921763198",
-    "project_id": "easysy",
-    "storage_bucket": "easysy.firebasestorage.app"
+    "project_number": "1030948704390",
+    "project_id": "easysy-9dd5e",
+    "storage_bucket": "easysy-9dd5e.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1011921763198:android:97ef8e30ae3f6746a2512f",
+        "mobilesdk_app_id": "1:1030948704390:android:f9bcff7f7a593a5dc4c107",
         "android_client_info": {
           "package_name": "com.easysy"
         }
       },
       "oauth_client": [
         {
-          "client_id": "1011921763198-8dbki9j753dv181m8c7he70sofr31n8q.apps.googleusercontent.com",
+          "client_id": "1030948704390-0i2732t2c920c5jolhd103rrho8jjrji.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.easysy",
+            "certificate_hash": "3fe4c11edfd6aa2e6c9639ec4c8149b7c104a7eb"
+          }
+        },
+        {
+          "client_id": "1030948704390-782kvho2mb36n74a66j52cpi5gemcc44.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyBaH9dg6LABeAe3CF5DpvEKsStlMGtCprI"
+          "current_key": "AIzaSyB9aSiLECiFXPxDBJp6I8zRmYzUNNHBnTw"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "1011921763198-8dbki9j753dv181m8c7he70sofr31n8q.apps.googleusercontent.com",
+              "client_id": "1030948704390-782kvho2mb36n74a66j52cpi5gemcc44.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "1030948704390-cv9tmanu01iisnla9lq3rqse7d6gtf9d.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "easysy"
+              }
             }
           ]
         }

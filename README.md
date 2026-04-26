@@ -86,6 +86,43 @@ You've successfully run and modified your React Native App. :partying_face:
 
 If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
 
+## Common Build & Configuration Errors
+
+### 1. Android: `INSTALL_FAILED_UPDATE_INCOMPATIBLE`
+**Error**: `Existing package com.easysy signatures do not match newer version; ignoring!`
+**Cause**: The app currently installed on your emulator/device was signed with a different keystore than the one you are trying to install now.
+**Solution**: Uninstall the existing app from your device/emulator before building again.
+```sh
+adb uninstall com.easysy
+yarn android
+```
+
+### 2. Android: Firebase "Another project contains an OAuth 2.0 client that uses this same SHA-1 fingerprint..."
+**Cause**: You are using the default React Native debug keystore, which is not globally unique. Another Google Cloud or Firebase project is already using this `SHA-1` + `Package Name` combination.
+**Solution**: Generate a new, unique debug keystore:
+```sh
+cd android/app
+rm debug.keystore
+keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+keytool -list -v -keystore debug.keystore -alias androiddebugkey -storepass android -keypass android
+```
+Then, copy the newly generated `SHA1` fingerprint and add it to your Firebase Console under Project Settings > Your Apps (Android). Note: You must also uninstall the old app using the step above before rebuilding.
+
+### 3. iOS: `Signing for "EasySy" requires a development team`
+**Cause**: Xcode is attempting to build the app to a real, physical iPhone connected to your computer, but no Apple Developer Team has been assigned.
+**Solution A (Use Simulator)**:
+If you just want to run the app on a simulator without dealing with Apple ID signing, explicitly pass the simulator flag:
+```sh
+yarn ios --simulator="iPhone 15 Pro"
+```
+**Solution B (Use Physical Device)**:
+If you want to run on your actual iPhone, you must assign your Apple ID:
+1. Run `open ios/EasySy.xcworkspace` in your terminal.
+2. In Xcode, select the **EasySy** project on the left sidebar.
+3. Click the **Signing & Capabilities** tab.
+4. Under the **Team** dropdown, select your Apple ID/Name.
+5. Close Xcode and run `yarn ios` again.
+
 # Learn More
 
 To learn more about React Native, take a look at the following resources:
