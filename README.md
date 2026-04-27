@@ -115,6 +115,12 @@ If you just want to run the app on a simulator without dealing with Apple ID sig
 ```sh
 yarn ios --simulator="iPhone 15 Pro"
 ```
+
+In prod mod to phone
+```sh
+yarn ios --mode Release 
+```
+
 **Solution B (Use Physical Device)**:
 If you want to run on your actual iPhone, you must assign your Apple ID:
 1. Run `open ios/EasySy.xcworkspace` in your terminal.
