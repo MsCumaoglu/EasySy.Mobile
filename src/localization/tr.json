@@ -56,7 +56,9 @@
     "pool_view": "Havuz Manzarası",
     "mountain_view": "Dağ Manzarası",
     "no_view": "Manzarasız",
-    "remove": "Kaldır"
+    "remove": "Kaldır",
+    "any": "Herhangi",
+    "under": "Altı"
   },
   "home": {
     "slogan": "Seyahat et ve Keşfet",
@@ -87,6 +89,9 @@
     "results": "Sonuçlar",
     "rating": "Puan",
     "perNight": "/ gece",
+    "recommendation": "Öneri",
+    "total": "Toplam",
+    "noPrice": "Fiyat Yok",
     "updateFilter": "Filtreyi Güncelle",
     "pool": "Havuz",
     "wifi": "Ücretsiz WiFi",
@@ -134,7 +139,13 @@
       "ratingDesc": "En Yüksek Puan",
       "nameAsc": "İsim: A'dan Z'ye"
     },
-    "roomsAndGuests": "Odalar ve Kişiler"
+    "roomsAndGuests": "Odalar ve Kişiler",
+    "openInMaps": "Haritada Aç",
+    "childrenAge": "0-17 yaş",
+    "maxRoomsReached": "En fazla 4 oda",
+    "addNewRoom": "+ Yeni oda ekle",
+    "hotelCountSuffix": "Otel",
+    "allHotels": "Oteller"
   },
   "bus": {
     "searchTitle": "Otobüs Ara",
@@ -173,11 +184,11 @@
       "express": "Ekspres"
     },
     "amenities": {
-      "title": "Olanaklar",
+      "title": "İmkanlar",
       "ac": "Klima",
-      "wifi": "Ücretsiz WiFi",
+      "wifi": "Ücretsiz Wi-Fi",
       "usb": "USB Şarj",
-      "snacks": "Atıştırmalık",
+      "snacks": "İkramlar",
       "toilet": "Tuvalet"
     },
     "sort": {
@@ -187,6 +198,16 @@
       "earliestDeparture": "En Erken Kalkış",
       "shortestDuration": "En Kısa Süre"
     }
+  },
+  "cities": {
+    "damascus": "Şam",
+    "latakkia": "Lazkiye",
+    "aleppo": "Halep",
+    "homs": "Humus",
+    "tartus": "Tartus",
+    "hama": "Hama",
+    "deirEzZor": "Deyrizor",
+    "suwayda": "Süveyde"
   },
   "settings": {
     "title": "Ayarlar",

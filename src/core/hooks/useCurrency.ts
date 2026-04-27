@@ -1,4 +1,5 @@
 import {useAtomValue} from 'jotai';
+import {useTranslation} from 'react-i18next';
 import {appCurrencyAtom, AppCurrency} from '../../state/appAtoms';
 
 // Mock exchange rates: 1 Target Currency = X SYP
@@ -19,6 +20,7 @@ const CURRENCY_SYMBOLS: Record<AppCurrency, string> = {
 
 export const useCurrency = () => {
   const currency = useAtomValue(appCurrencyAtom);
+  const {t} = useTranslation();
 
   /**
    * Converts a SYP amount to the user's selected currency
@@ -26,7 +28,7 @@ export const useCurrency = () => {
    * @returns Formatted string with currency symbol (e.g. "$120" or "1.500 SYP")
    */
   const formatPrice = (amountInSyp: number): string => {
-    if (!amountInSyp || amountInSyp <= 0) return 'Fiyat Yok';
+    if (!amountInSyp || amountInSyp <= 0) return t('hotels.noPrice', {defaultValue: 'Price Not Available'});
 
     const activeCurrency = currency || 'USD';
     const rate = EXCHANGE_RATES[activeCurrency] || 1;

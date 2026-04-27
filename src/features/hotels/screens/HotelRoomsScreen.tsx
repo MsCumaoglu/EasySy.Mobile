@@ -153,7 +153,9 @@ export default function HotelRoomsScreen() {
       <View style={styles.combinationCard}>
         {/* Header */}
         <View style={styles.combinationHeader}>
-          <Text style={styles.combinationName}>Öneri {index + 1} ({item.rooms.length} oda)</Text>
+          <Text style={styles.combinationName}>
+            {t('hotels.recommendation', {defaultValue: 'Recommendation'})} {index + 1} ({item.rooms.length} {t('common.rooms', {defaultValue: 'rooms'}).toLowerCase()})
+          </Text>
           <View style={styles.combinationPricePill}>
             <Text style={styles.combinationPricePillText}>{formatPrice(item.totalPrice)} {t('hotels.total', {defaultValue: 'Total'})}</Text>
           </View>

@@ -589,7 +589,7 @@ const HotelDetailScreen: React.FC = () => {
               )}
               <View style={styles.mapOverlay}>
                 <Icon name="expand-outline" style={styles.mapExpandIcon} />
-                <Text style={styles.mapExpandText}>Open in Maps</Text>
+                <Text style={styles.mapExpandText}>{t('hotels.openInMaps')}</Text>
               </View>
             </TouchableOpacity>
           </>

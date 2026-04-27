@@ -302,7 +302,7 @@ const HotelResultsScreen: React.FC = () => {
       />
 
       <ScreenHeader
-        title={params.location || 'Hotels'}
+        title={params.location || t('hotels.allHotels', {defaultValue: 'Hotels'})}
         subtitleNode={subtitleNode}
         centered
         containerStyle={styles.header}

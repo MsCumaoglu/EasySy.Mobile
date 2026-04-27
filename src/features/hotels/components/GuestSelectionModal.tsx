@@ -336,7 +336,7 @@ const GuestSelectionModal: React.FC<GuestSelectionModalProps> = ({
                           />
                           <CounterRow
                             title={t('common.children') || 'Children'}
-                            subtitle="0-17 age"
+                            subtitle={t('hotels.childrenAge') || '0-17 age'}
                             value={room.children}
                             onValueChange={(val) => updateRoom(idx, 'children', val - room.children)}
                           />
@@ -352,7 +352,7 @@ const GuestSelectionModal: React.FC<GuestSelectionModalProps> = ({
                     disabled={rooms.length >= 4}
                 >
                     <Text style={[styles.addRoomText, rooms.length >= 4 && styles.addRoomDisabledText]}>
-                      {rooms.length >= 4 ? 'Maximum 4 rooms' : '+ Add new room'}
+                      {rooms.length >= 4 ? t('hotels.maxRoomsReached') : t('hotels.addNewRoom')}
                     </Text>
                 </TouchableOpacity>
 

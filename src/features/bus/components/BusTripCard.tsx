@@ -28,6 +28,7 @@ const BusTripCard: React.FC<BusTripCardProps> = ({trip, onPress, style}) => {
   const {colors, spacing, radius, typography} = useTheme();
   const {t} = useTranslation();
   const badge = BUS_TYPE_BADGE[trip.busType];
+  const localizedLabel = t(`bus.type.${trip.busType}`, {defaultValue: badge.label});
 
   const styles = StyleSheet.create({
     card: {
@@ -162,7 +163,7 @@ const BusTripCard: React.FC<BusTripCardProps> = ({trip, onPress, style}) => {
           <Icon name="bus" style={styles.busIcon} />
           <Text style={styles.companyName}>{trip.company}</Text>
           <View style={[styles.typeBadge, {backgroundColor: badge.color}]}>
-            <Text style={styles.typeBadgeText}>{badge.label}</Text>
+            <Text style={styles.typeBadgeText}>{localizedLabel}</Text>
           </View>
         </View>
         <Text style={styles.seatsText}>{trip.availableSeats} {t('bus.seats')}</Text>

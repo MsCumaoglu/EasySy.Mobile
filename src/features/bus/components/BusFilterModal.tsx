@@ -37,10 +37,10 @@ export interface BusFilters {
 const BUS_TYPES = ['standard', 'vip', 'express'] as const;
 
 const PRICE_RANGES = [
-  {label: '< $20', max: 20},
-  {label: '< $40', max: 40},
-  {label: '< $60', max: 60},
-  {label: 'Any', max: undefined},
+  {labelKey: 'common.under', value: 20},
+  {labelKey: 'common.under', value: 40},
+  {labelKey: 'common.under', value: 60},
+  {labelKey: 'common.any',   value: undefined},
 ];
 
 const DEPARTURE_SLOTS: {key: BusFilters['departureSlot']; icon: string; labelKey: string}[] = [
@@ -208,15 +208,16 @@ const BusFilterModal: React.FC<Props> = ({
         <Text style={s.sectionLabel}>{t('hotels.filters.priceRange')}</Text>
         <View style={s.chipRow}>
           {PRICE_RANGES.map(p => {
-            const active = draft.maxPrice === p.max;
+            const active = draft.maxPrice === p.value;
+            const label = p.value ? `${t('common.under')} $${p.value}` : t('common.any');
             return (
               <TouchableOpacity
-                key={p.label}
+                key={p.value ?? 'any'}
                 style={[s.chip, active && s.chipActive]}
-                onPress={() => setDraft(prev => ({...prev, maxPrice: p.max}))}
+                onPress={() => setDraft(prev => ({...prev, maxPrice: p.value}))}
                 activeOpacity={0.75}>
                 <Text style={[s.chipText, active && s.chipTextActive]}>
-                  {p.label}
+                  {label}
                 </Text>
               </TouchableOpacity>
             );

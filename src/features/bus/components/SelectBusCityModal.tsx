@@ -22,15 +22,15 @@ interface City {
   trips: number;
 }
 
-const BUS_CITIES: City[] = [
-  {id: '1', name: 'Damascus',    trips: 24},
-  {id: '2', name: 'Latakkia',    trips: 18},
-  {id: '3', name: 'Aleppo',      trips: 20},
-  {id: '4', name: 'Homs',        trips: 14},
-  {id: '5', name: 'Tartus',      trips: 10},
-  {id: '6', name: 'Hama',        trips: 9},
-  {id: '7', name: 'Deir ez-Zor', trips: 7},
-  {id: '8', name: 'Suwayda',     trips: 5},
+const BUS_CITIES: (Omit<City, 'name'> & {nameKey: string})[] = [
+  {id: '1', nameKey: 'cities.damascus',    trips: 24},
+  {id: '2', nameKey: 'cities.latakkia',    trips: 18},
+  {id: '3', nameKey: 'cities.aleppo',      trips: 20},
+  {id: '4', nameKey: 'cities.homs',        trips: 14},
+  {id: '5', nameKey: 'cities.tartus',      trips: 10},
+  {id: '6', nameKey: 'cities.hama',        trips: 9},
+  {id: '7', nameKey: 'cities.deirEzZor',   trips: 7},
+  {id: '8', nameKey: 'cities.suwayda',     trips: 5},
 ];
 
 interface SelectBusCityModalProps {
@@ -52,12 +52,18 @@ const SelectBusCityModal: React.FC<SelectBusCityModalProps> = ({
   const {t} = useTranslation();
   const [query, setQuery] = useState('');
 
+  const translatedCities = useMemo(() => 
+    BUS_CITIES.map(city => ({
+      ...city,
+      name: t(city.nameKey)
+    })), [t]);
+
   const filteredCities = useMemo(() => {
-    if (!query) return BUS_CITIES;
-    return BUS_CITIES.filter(city =>
+    if (!query) return translatedCities;
+    return translatedCities.filter(city =>
       city.name.toLowerCase().includes(query.toLowerCase()),
     );
-  }, [query]);
+  }, [query, translatedCities]);
 
   const renderHighlight = (text: string) => {
     if (!query.trim()) return <Text style={styles.cityName}>{text}</Text>;

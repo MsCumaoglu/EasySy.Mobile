@@ -84,7 +84,7 @@ function hasActiveFilters(f: BusFilters): boolean {
 
 const BusResultsScreen: React.FC = () => {
   const navigation = useNavigation<BusResultsNavProp>();
-  const {t} = useTranslation();
+  const {t, i18n} = useTranslation();
   const {colors, spacing, radius, typography, isDark} = useTheme();
   const {isRTL} = useRTL();
   const params = useAtomValue(busSearchParamsAtom);
@@ -123,7 +123,7 @@ const BusResultsScreen: React.FC = () => {
 
   // Format date for subtitle
   const dateStr = params.date
-    ? new Date(params.date).toLocaleDateString('en-GB', {day: 'numeric', month: 'short'})
+    ? new Date(params.date).toLocaleDateString(i18n.language === 'en' ? 'en-GB' : i18n.language, {day: 'numeric', month: 'short'})
     : '---';
 
   const styles = StyleSheet.create({

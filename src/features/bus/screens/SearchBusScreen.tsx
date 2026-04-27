@@ -28,12 +28,12 @@ const illustrationImage = require('../../../assets/images/illustration/image.png
 type SearchBusNavProp = NativeStackNavigationProp<BusStackParamList, 'SearchBus'>;
 
 const POPULAR_CITIES = [
-  {name: 'Damascus',    icon: 'business-outline'},
-  {name: 'Latakkia',   icon: 'water-outline'},
-  {name: 'Aleppo',     icon: 'home-outline'},
-  {name: 'Homs',       icon: 'leaf-outline'},
-  {name: 'Tartus',     icon: 'boat-outline'},
-  {name: 'Deir ez-Zor',icon: 'sunny-outline'},
+  {nameKey: 'cities.damascus', icon: 'business-outline'},
+  {nameKey: 'cities.latakkia',  icon: 'water-outline'},
+  {nameKey: 'cities.aleppo',    icon: 'home-outline'},
+  {nameKey: 'cities.homs',      icon: 'leaf-outline'},
+  {nameKey: 'cities.tartus',    icon: 'boat-outline'},
+  {nameKey: 'cities.deirEzZor', icon: 'sunny-outline'},
 ];
 
 const SearchBusScreen: React.FC = () => {
@@ -213,22 +213,25 @@ const SearchBusScreen: React.FC = () => {
             <Text style={styles.popularTitle}>{t('bus.popularCities')}</Text>
           </View>
           <View style={styles.chipsGrid}>
-            {POPULAR_CITIES.map(city => (
-              <TouchableOpacity
-                key={city.name}
-                style={styles.chip}
-                activeOpacity={0.75}
-                onPress={() =>
-                  setParams(p => ({
-                    ...p,
-                    from: p.from ? p.from : city.name,
-                    to: p.from ? city.name : p.to,
-                  }))
-                }>
-                <Icon name={city.icon} style={styles.chipIcon} />
-                <Text style={styles.chipText}>{city.name}</Text>
-              </TouchableOpacity>
-            ))}
+            {POPULAR_CITIES.map(city => {
+              const cityName = t(city.nameKey);
+              return (
+                <TouchableOpacity
+                  key={city.nameKey}
+                  style={styles.chip}
+                  activeOpacity={0.75}
+                  onPress={() =>
+                    setParams(p => ({
+                      ...p,
+                      from: p.from ? p.from : cityName,
+                      to: p.from ? cityName : p.to,
+                    }))
+                  }>
+                  <Icon name={city.icon} style={styles.chipIcon} />
+                  <Text style={styles.chipText}>{cityName}</Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
 

@@ -56,7 +56,9 @@
     "pool_view": "Pool View",
     "mountain_view": "Mountain View",
     "no_view": "No View",
-    "remove": "Remove"
+    "remove": "Remove",
+    "any": "Any",
+    "under": "Under"
   },
   "home": {
     "slogan": "Travel and Explore",
@@ -89,6 +91,9 @@
     "perNight": "/ night",
     "availability": "Available",
     "updateFilter": "Update Filter",
+    "recommendation": "Recommendation",
+    "total": "Total",
+    "noPrice": "Price Not Available",
     "pool": "Pool",
     "wifi": "Free WiFi",
     "restaurant": "Restaurant",
@@ -136,7 +141,13 @@
       "ratingDesc": "Highest Rated",
       "nameAsc": "Name: A–Z"
     },
-    "roomsAndGuests": "Rooms & Guests"
+    "roomsAndGuests": "Rooms & Guests",
+    "openInMaps": "Open in Maps",
+    "childrenAge": "0-17 age",
+    "maxRoomsReached": "Maximum 4 rooms",
+    "addNewRoom": "+ Add new room",
+    "hotelCountSuffix": "Hotels",
+    "allHotels": "Hotels"
   },
   "bus": {
     "searchTitle": "Search Bus Travel",
@@ -189,6 +200,16 @@
       "earliestDeparture": "Earliest Departure",
       "shortestDuration": "Shortest Duration"
     }
+  },
+  "cities": {
+    "damascus": "Damascus",
+    "latakkia": "Latakkia",
+    "aleppo": "Aleppo",
+    "homs": "Homs",
+    "tartus": "Tartus",
+    "hama": "Hama",
+    "deirEzZor": "Deir ez-Zor",
+    "suwayda": "Suwayda"
   },
   "settings": {
     "title": "Settings",

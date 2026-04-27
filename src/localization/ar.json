@@ -55,7 +55,9 @@
     "garden_view": "إطلالة على الحديقة",
     "pool_view": "إطلالة على المسبح",
     "mountain_view": "إطلالة على الجبل",
-    "no_view": "بدون إطلالة"
+    "remove": "إزالة",
+    "any": "أي",
+    "under": "أقل من"
   },
   "home": {
     "slogan": "سافر واستكشف",
@@ -86,6 +88,9 @@
     "results": "النتائج",
     "rating": "التقييم",
     "perNight": "/ ليلة",
+    "recommendation": "اقتراح",
+    "total": "الإجمالي",
+    "noPrice": "السعر غير متاح",
     "updateFilter": "تحديث الفلتر",
     "pool": "حمام السباحة",
     "wifi": "واي فاي مجاني",
@@ -132,7 +137,14 @@
       "priceDesc": "السعر: من الأعلى إلى الأقل",
       "ratingDesc": "الأعلى تقييماً",
       "nameAsc": "الاسم: أ–ي"
-    }
+    },
+    "roomsAndGuests": "الغرف والضيوف",
+    "openInMaps": "فتح في الخرائط",
+    "childrenAge": "0-17 سنة",
+    "maxRoomsReached": "4 غرف كحد أقصى",
+    "addNewRoom": "+ إضافة غرفة جديدة",
+    "hotelCountSuffix": "فنادق",
+    "allHotels": "الفنادق"
   },
   "bus": {
     "searchTitle": "البحث عن حافلة",
@@ -185,6 +197,16 @@
       "earliestDeparture": "أبكر مغادرة",
       "shortestDuration": "أقصر مدة"
     }
+  },
+  "cities": {
+    "damascus": "دمشق",
+    "latakkia": "اللاذقية",
+    "aleppo": "حلب",
+    "homs": "حمص",
+    "tartus": "طرطوس",
+    "hama": "حماة",
+    "deirEzZor": "دير الزور",
+    "suwayda": "السويداء"
   },
   "settings": {
     "title": "الإعدادات",
