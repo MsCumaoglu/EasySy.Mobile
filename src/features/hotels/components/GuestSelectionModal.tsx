@@ -8,6 +8,7 @@ import {
   TouchableWithoutFeedback,
   Dimensions,
   SafeAreaView,
+  ScrollView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {useTheme} from '../../../app/providers/ThemeProvider';
@@ -33,9 +34,13 @@ const GuestSelectionModal: React.FC<GuestSelectionModalProps> = ({
   const {t} = useTranslation();
   const {colors, spacing, radius, typography} = useTheme();
   const [rooms, setRooms] = useState<HotelRoomConfig[]>(initialRoomsConfig);
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(0);
 
   React.useEffect(() => {
-    if (isVisible) setRooms(initialRoomsConfig);
+    if (isVisible) {
+      setRooms(initialRoomsConfig);
+      setExpandedIdx(0);
+    }
   }, [isVisible, initialRoomsConfig]);
 
   const updateRoom = (idx: number, field: 'adults' | 'children', delta: number) => {
@@ -48,12 +53,23 @@ const GuestSelectionModal: React.FC<GuestSelectionModalProps> = ({
 
   const addRoom = () => {
     if (rooms.length < 4) {
+      const nextIdx = rooms.length;
       setRooms(prev => [...prev, {adults: 1, children: 0}]);
+      setExpandedIdx(nextIdx);
     }
   };
 
   const removeRoom = (idx: number) => {
-    setRooms(prev => prev.filter((_, i) => i !== idx));
+    setRooms(prev => {
+      const newRooms = prev.filter((_, i) => i !== idx);
+      // Adjust expandedIdx after removal
+      if (expandedIdx === idx) {
+        setExpandedIdx(0);
+      } else if (expandedIdx !== null && expandedIdx > idx) {
+        setExpandedIdx(expandedIdx - 1);
+      }
+      return newRooms;
+    });
   };
 
   const CounterRow = ({
@@ -139,17 +155,25 @@ const GuestSelectionModal: React.FC<GuestSelectionModalProps> = ({
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingTop: spacing.xs,
-      paddingBottom: spacing.sm,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-      marginBottom: spacing.xs,
+      paddingVertical: spacing.sm,
+    },
+    roomTitleGroup: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    chevronIcon: {
+      fontSize: 18,
+      color: colors.primary,
     },
     roomTitle: {
       ...typography.subtitle,
-      fontSize: 15,
+      fontSize: 16,
       fontWeight: '700',
       color: colors.textPrimary,
+    },
+    roomContent: {
+      marginTop: spacing.xs,
     },
     removeBtn: {
       paddingHorizontal: spacing.sm,
@@ -158,7 +182,8 @@ const GuestSelectionModal: React.FC<GuestSelectionModalProps> = ({
     removeText: {
       ...typography.caption,
       color: '#EF4444',
-      fontWeight: '600',
+      fontWeight: '700',
+      fontSize: 13,
     },
     counterRow: {
       flexDirection: 'row',
@@ -279,32 +304,47 @@ const GuestSelectionModal: React.FC<GuestSelectionModalProps> = ({
                   <Text style={styles.title}>{t('hotels.roomsAndGuests') || 'Rooms & Guests'}</Text>
                 </View>
 
-                <View style={styles.roomsList}>
+                <ScrollView style={styles.roomsList} showsVerticalScrollIndicator={false}>
                   {rooms.map((room, idx) => (
                     <View key={idx} style={styles.roomBlock}>
-                      <View style={styles.roomHeader}>
-                        <Text style={styles.roomTitle}>{t('common.room') || 'Room'} {idx + 1}</Text>
+                      <TouchableOpacity 
+                        style={styles.roomHeader} 
+                        activeOpacity={0.7}
+                        onPress={() => setExpandedIdx(expandedIdx === idx ? null : idx)}
+                      >
+                        <View style={styles.roomTitleGroup}>
+                          <Icon 
+                            name={expandedIdx === idx ? "chevron-down" : "chevron-forward"} 
+                            style={styles.chevronIcon} 
+                          />
+                          <Text style={styles.roomTitle}>{t('common.room') || 'Room'} {idx + 1}</Text>
+                        </View>
                         {idx > 0 && (
                           <TouchableOpacity style={styles.removeBtn} onPress={() => removeRoom(idx)}>
                             <Text style={styles.removeText}>{t('common.remove') || 'Remove'}</Text>
                           </TouchableOpacity>
                         )}
-                      </View>
-                      <CounterRow
-                        title={t('common.adults') || 'Adults'}
-                        value={room.adults}
-                        onValueChange={(val) => updateRoom(idx, 'adults', val - room.adults)}
-                        minValue={1}
-                      />
-                      <CounterRow
-                        title={t('common.children') || 'Children'}
-                        subtitle="0-17 age"
-                        value={room.children}
-                        onValueChange={(val) => updateRoom(idx, 'children', val - room.children)}
-                      />
+                      </TouchableOpacity>
+
+                      {expandedIdx === idx && (
+                        <View style={styles.roomContent}>
+                          <CounterRow
+                            title={t('common.adults') || 'Adults'}
+                            value={room.adults}
+                            onValueChange={(val) => updateRoom(idx, 'adults', val - room.adults)}
+                            minValue={1}
+                          />
+                          <CounterRow
+                            title={t('common.children') || 'Children'}
+                            subtitle="0-17 age"
+                            value={room.children}
+                            onValueChange={(val) => updateRoom(idx, 'children', val - room.children)}
+                          />
+                        </View>
+                      )}
                     </View>
                   ))}
-                </View>
+                </ScrollView>
 
                 <TouchableOpacity 
                     style={[styles.addRoomBtn, rooms.length >= 4 && styles.addRoomDisabled]}

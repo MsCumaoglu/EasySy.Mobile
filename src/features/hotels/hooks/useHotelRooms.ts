@@ -11,7 +11,7 @@
 import {useQuery} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
 import {useAtomValue} from 'jotai';
-import {hotelService, RoomCombinationItem} from '../../../core/api/services/hotelService';
+import {hotelService, RoomCombinationsResponse} from '../../../core/api/services/hotelService';
 import {hotelSearchParamsAtom} from '../state/hotelAtoms';
 
 export function useHotelRoomCombinations(hotelId: string) {
@@ -23,7 +23,7 @@ export function useHotelRoomCombinations(hotelId: string) {
     .map(r => `${r.adults}:${r.children}`)
     .join(',');
 
-  return useQuery<RoomCombinationItem[]>({
+  return useQuery<RoomCombinationsResponse>({
     queryKey: ['hotels', 'combinations', hotelId, roomsQueryString, searchParams.checkIn, searchParams.checkOut, i18n.language] as const,
     queryFn: async () => {
       const response = await hotelService.getRoomCombinations(hotelId, {
@@ -31,7 +31,7 @@ export function useHotelRoomCombinations(hotelId: string) {
         checkIn: searchParams.checkIn,
         checkOut: searchParams.checkOut,
       });
-      return response.combinations || [];
+      return response;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     enabled: !!hotelId && !!roomsQueryString,
