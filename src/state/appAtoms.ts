@@ -9,7 +9,7 @@ export type AppCurrency = 'USD' | 'EUR' | 'TRY' | 'SYP';
 const mmkvJotaiStorage = {
   getItem: (key: string): any => {
     const value = storageService.getString(key);
-    return value !== undefined ? JSON.parse(value) : null;
+    return value !== undefined ? JSON.parse(value) : undefined;
   },
   setItem: (key: string, value: any): void => {
     storageService.setString(key, JSON.stringify(value));

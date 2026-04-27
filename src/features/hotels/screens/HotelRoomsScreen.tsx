@@ -20,6 +20,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import {HotelStackParamList} from '../../../app/navigation/types';
 import {useTheme} from '../../../app/providers/ThemeProvider';
 import {useHotelRoomCombinations} from '../hooks/useHotelRooms';
+import {useHotelDetail} from '../hooks/useHotelDetail';
 import {hotelSearchParamsAtom} from '../state/hotelAtoms';
 import Loader from '../../../shared/components/Loader';
 import PrimaryButton from '../../../shared/components/PrimaryButton';
@@ -40,6 +41,7 @@ export default function HotelRoomsScreen() {
 
   const [searchParams, setSearchParams] = useAtom(hotelSearchParamsAtom);
   const {data: combinations, isLoading, isFetching} = useHotelRoomCombinations(hotelId);
+  const {data: hotel} = useHotelDetail(hotelId);
   const {formatPrice} = useCurrency();
 
   const totalAdults = searchParams.roomsConfig.reduce((sum, r) => sum + r.adults, 0);
@@ -185,24 +187,28 @@ export default function HotelRoomsScreen() {
 
         {/* Footer Actions */}
         <View style={styles.footerRow}>
-          {combinations?.isAvailableForBooking !== false && (
-            <TouchableOpacity style={styles.bookBtn} onPress={() => {}}>
-              <Text style={styles.bookBtnText}>{t('common.bookNow', {defaultValue: 'Book Now'})}</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity 
+            style={[
+              styles.bookBtn, 
+              hotel?.isAvailableForBooking === false && styles.bookBtnDisabled
+            ]} 
+            onPress={() => {}}
+            disabled={hotel?.isAvailableForBooking === false}
+          >
+            <Text style={styles.bookBtnText}>
+              {t('common.bookNow', {defaultValue: 'Book Now'})}
+            </Text>
+          </TouchableOpacity>
 
           <TouchableOpacity 
-            style={[styles.whatsappBtn, combinations?.isAvailableForBooking === false && {flex: 1}]} 
+            style={styles.whatsappBtn} 
             onPress={() => {
-              const whatsappNum = combinations?.whatsapp || '';
+              const whatsappNum = hotel?.whatsapp || '';
               if (whatsappNum) {
                 Linking.openURL(`whatsapp://send?phone=${whatsappNum.replace(/\+/g, '')}`);
               }
             }}
           >
-            {combinations?.isAvailableForBooking === false && (
-              <Text style={[styles.bookBtnText, {marginRight: 8}]}>WhatsApp</Text>
-            )}
             <Icon name="logo-whatsapp" style={styles.whatsappIcon} />
           </TouchableOpacity>
         </View>
@@ -433,6 +439,11 @@ export default function HotelRoomsScreen() {
       color: '#FFFFFF',
       fontSize: 18,
       fontWeight: '800',
+    },
+    bookBtnDisabled: {
+      backgroundColor: '#9CA3AF',
+      shadowOpacity: 0,
+      elevation: 0,
     },
     whatsappBtn: {
       width: 56,

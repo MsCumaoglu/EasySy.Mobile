@@ -30,6 +30,7 @@ import {useHotelReviews} from '../hooks/useHotelReviews';
 import {HotelTab} from '../types/hotelTypes';
 import {formatCurrency} from '../../../core/utils/format';
 import {useRTL} from '../../../core/hooks/useRTL';
+import {useCurrency} from '../../../core/hooks/useCurrency';
 import PrimaryButton from '../../../shared/components/PrimaryButton';
 import Loader from '../../../shared/components/Loader';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -69,6 +70,7 @@ const HotelDetailScreen: React.FC = () => {
     selectedHotel,
   );
 
+  const {formatPrice} = useCurrency();
   const [activeTab, setActiveTab] = useState<HotelTab>('detail');
 
   // Paginated reviews from the real API — fetch ONLY when reviews tab is active
@@ -741,11 +743,13 @@ const HotelDetailScreen: React.FC = () => {
               <Icon name="location" style={styles.locationPinIcon} />
               <Text style={styles.locationTopText}>{hotel.location}</Text>
             </View>
-            <View style={styles.priceBadge}>
-              <Text style={styles.priceBadgeText}>
-                {hotel.priceMin}$ - {hotel.priceMax}$
-              </Text>
-            </View>
+            {hotel.priceMin > 0 && (
+              <View style={styles.priceBadge}>
+                <Text style={styles.priceBadgeText}>
+                  {formatPrice(hotel.priceMin)}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
 

@@ -28,12 +28,13 @@ export const useCurrency = () => {
   const formatPrice = (amountInSyp: number): string => {
     if (!amountInSyp || amountInSyp <= 0) return 'Fiyat Yok';
 
-    const rate = EXCHANGE_RATES[currency] || 1;
+    const activeCurrency = currency || 'USD';
+    const rate = EXCHANGE_RATES[activeCurrency] || 1;
     const convertedAmount = amountInSyp / rate;
-    const symbol = CURRENCY_SYMBOLS[currency] || currency;
+    const symbol = CURRENCY_SYMBOLS[activeCurrency] || activeCurrency;
 
     // Formatting rules based on currency
-    if (currency === 'SYP') {
+    if (activeCurrency === 'SYP') {
       return `${Math.round(convertedAmount).toLocaleString()} ${symbol}`;
     }
 

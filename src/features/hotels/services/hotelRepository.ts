@@ -26,7 +26,7 @@ import {
   CATEGORY_TO_PROPERTY_TYPE,
 } from '../types/hotelTypes';
 
-export const PAGE_SIZE = 20;
+export const PAGE_SIZE = 5;
 
 // ---------------------------------------------------------------------------
 // Amenity key mapping: backend slug → app HotelAmenity
@@ -247,6 +247,9 @@ export const hotelRepository = {
           ? `${d.city}, ${d.district}`
           : d.address || d.city || 'Unknown';
 
+        // Preserve prices if they exist in cache (from a search)
+        const cached = hotelDao.getById(id);
+        
         const hotel: Hotel = {
           id:          d.id || id,
           name:        d.name || 'Unknown Hotel',
@@ -255,13 +258,16 @@ export const hotelRepository = {
           country:     'Syria',
           rating:      d.avgRating ?? 0,
           reviewCount: d.totalReviews ?? 0,
-          priceMin:    0,
-          priceMax:    0,
-          currency:    'SYP',
+          priceMin:    (cached?.priceMin && cached.priceMin > 0) ? cached.priceMin : 0,
+          priceMax:    (cached?.priceMax && cached.priceMax > 0) ? cached.priceMax : 0,
+          currency:    cached?.currency || 'SYP',
           images:      imageUrls.length > 0
             ? imageUrls
             : (primaryImg ? [primaryImg.url] : []),
           amenities:   mapAmenities(d.amenities || []),
+          isAvailableForBooking: d.isAvailableForBooking,
+          phone:       d.phone,
+          whatsapp:    d.whatsapp,
           description: d.description || '',
           coordinates: {latitude: d.latitude || 0, longitude: d.longitude || 0},
           category:    mapCategory(d.propertyType || 'HOTEL', d.starRating || 3),

@@ -20,6 +20,9 @@ export interface Hotel {
   currency: string;
   images: string[];
   amenities: HotelAmenity[];
+  isAvailableForBooking?: boolean;
+  phone?: string;
+  whatsapp?: string;
   description: string;
   descriptionEn?: string;
   descriptionAr?: string;
