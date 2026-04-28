@@ -5,6 +5,8 @@ export interface Hotel {
   nameAr?: string;
   nameTr?: string;
   location: string;
+  address?: string;
+  district?: string;
   addressEn?: string;
   addressAr?: string;
   addressTr?: string;
@@ -14,6 +16,7 @@ export interface Hotel {
   cityTr?: string;
   country: string;
   rating: number;
+  starRating: number;
   reviewCount: number;
   priceMin: number;
   priceMax: number;

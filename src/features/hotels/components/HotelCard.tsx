@@ -11,6 +11,7 @@ import {useTheme} from '../../../app/providers/ThemeProvider';
 import {Hotel} from '../models/Hotel';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {useCurrency} from '../../../core/hooks/useCurrency';
+import {useTranslation} from 'react-i18next';
 
 interface HotelCardProps {
   hotel: Hotel;
@@ -32,9 +33,10 @@ const AMENITY_ICONS: Record<string, string> = {
 const HotelCard: React.FC<HotelCardProps> = ({hotel, onPress, style}) => {
   const {colors, spacing, radius, typography} = useTheme();
   const {formatPrice} = useCurrency();
+  const {t} = useTranslation();
   const [liked, setLiked] = useState(false);
 
-  const displayAmenities = hotel.amenities.slice(0, 4);
+  const displayAmenities = hotel.amenities.slice(0, 3);
 
   const styles = StyleSheet.create({
     card: {
@@ -42,29 +44,32 @@ const HotelCard: React.FC<HotelCardProps> = ({hotel, onPress, style}) => {
       borderRadius: radius.xl,
       marginBottom: spacing.lg,
       shadowColor: colors.shadow,
-      shadowOffset: {width: 0, height: 2},
-      shadowOpacity: 0.06,
-      shadowRadius: 8,
-      elevation: 3,
+      shadowOffset: {width: 0, height: 4},
+      shadowOpacity: 0.08,
+      shadowRadius: 12,
+      elevation: 4,
       overflow: 'hidden',
     },
+
+    /* ── Image Section ── */
     imageWrapper: {
       width: '100%',
-      height: 200,
+      height: 210,
       position: 'relative',
     },
     image: {
-      width: '97%',
-      height: '100%',
-      margin:5,
+      width: '94%',
+      height: '92%',
+      alignSelf: 'center',
+      marginTop: 8,
       borderRadius: radius.lg,
       backgroundColor: colors.surface,
     },
     topOverlay: {
       position: 'absolute',
-      top: spacing.md,
-      left: spacing.md,
-      right: spacing.md,
+      top: spacing.md + 2,
+      left: spacing.md + 4,
+      right: spacing.md + 4,
       flexDirection: 'row',
       justifyContent: 'space-between',
     },
@@ -77,9 +82,9 @@ const HotelCard: React.FC<HotelCardProps> = ({hotel, onPress, style}) => {
       justifyContent: 'center',
       shadowColor: '#000',
       shadowOffset: {width: 0, height: 1},
-      shadowOpacity: 0.1,
+      shadowOpacity: 0.12,
       shadowRadius: 4,
-      elevation: 2,
+      elevation: 3,
     },
     iconBtn: {
       fontSize: 18,
@@ -91,8 +96,8 @@ const HotelCard: React.FC<HotelCardProps> = ({hotel, onPress, style}) => {
     },
     ratingBadge: {
       position: 'absolute',
-      bottom: spacing.md,
-      right: spacing.md,
+      bottom: spacing.md + 4,
+      right: spacing.md + 6,
       backgroundColor: 'rgba(255,255,255,0.95)',
       borderRadius: radius.full,
       paddingHorizontal: spacing.md,
@@ -102,9 +107,9 @@ const HotelCard: React.FC<HotelCardProps> = ({hotel, onPress, style}) => {
       gap: 4,
       shadowColor: '#000',
       shadowOffset: {width: 0, height: 1},
-      shadowOpacity: 0.1,
+      shadowOpacity: 0.12,
       shadowRadius: 4,
-      elevation: 2,
+      elevation: 3,
     },
     ratingText: {
       ...typography.caption,
@@ -116,36 +121,34 @@ const HotelCard: React.FC<HotelCardProps> = ({hotel, onPress, style}) => {
       fontSize: 13,
       color: colors.textPrimary,
     },
+
+    /* ── Content Section ── */
     content: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
     },
-    nameRow: {
+    nameStarsRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: spacing.sm,
+      marginBottom: 6,
+      gap: 8,
     },
     name: {
       ...typography.subtitle,
       color: colors.textPrimary,
       fontWeight: '700',
       fontSize: 16,
-      flex: 1,
-      marginRight: spacing.sm,
     },
-    pricePill: {
-      backgroundColor: colors.primary,
-      borderRadius: radius.md,
-      paddingHorizontal: spacing.md,
-      paddingVertical: 5,
+    categoryStars: {
+      flexDirection: 'row',
+      gap: 1,
     },
-    priceText: {
-      color: colors.white,
-      fontSize: 12,
-      fontWeight: '700',
+    catStar: {
+      fontSize: 13,
+      color: '#F5A623',
     },
-    locationRow: {
+    locationAmenityRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -156,7 +159,7 @@ const HotelCard: React.FC<HotelCardProps> = ({hotel, onPress, style}) => {
       flex: 1,
     },
     locationIcon: {
-      fontSize: 14,
+      fontSize: 15,
       color: colors.primary,
       marginRight: 4,
     },
@@ -167,19 +170,44 @@ const HotelCard: React.FC<HotelCardProps> = ({hotel, onPress, style}) => {
     },
     amenityRow: {
       flexDirection: 'row',
-      gap: spacing.sm,
-    },
-    amenityIconCircle: {
-      width: 30,
-      height: 30,
-      borderRadius: 15,
-      backgroundColor: colors.surface,
-      alignItems: 'center',
-      justifyContent: 'center',
+      gap: 6,
     },
     amenityIcon: {
-      fontSize: 15,
+      fontSize: 18,
       color: colors.primary,
+    },
+
+    /* ── Price Footer ── */
+    priceFooter: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      marginTop: spacing.sm,
+    },
+    priceLabel: {
+      ...typography.caption,
+      color: colors.textSecondary,
+      fontSize: 13,
+    },
+    priceValueRow: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      gap: 2,
+    },
+    priceValue: {
+      ...typography.title,
+      color: colors.textPrimary,
+      fontWeight: '800',
+      fontSize: 20,
+    },
+    priceUnit: {
+      ...typography.caption,
+      color: colors.textSecondary,
+      fontSize: 12,
     },
   });
 
@@ -219,32 +247,40 @@ const HotelCard: React.FC<HotelCardProps> = ({hotel, onPress, style}) => {
 
       {/* Content */}
       <View style={styles.content}>
-        {/* Name + Price */}
-        <View style={styles.nameRow}>
-          <Text style={styles.name}>{hotel.name}</Text>
-          <View style={styles.pricePill}>
-            <Text style={styles.priceText}>
-              {formatPrice(hotel.priceMin)}
-            </Text>
+        {/* Hotel Name + Category Stars */}
+        <View style={styles.nameStarsRow}>
+          <Text style={styles.name} numberOfLines={1}>{hotel.name}</Text>
+          <View style={styles.categoryStars}>
+            {Array.from({length: hotel.starRating || 0}).map((_, i) => (
+              <Icon key={`s-${i}`} name="star" style={styles.catStar} />
+            ))}
           </View>
         </View>
 
         {/* Location + Amenities */}
-        <View style={styles.locationRow}>
+        <View style={styles.locationAmenityRow}>
           <View style={styles.locationLeft}>
             <Icon name="location" style={styles.locationIcon} />
-            <Text style={styles.locationText}>{hotel.location}</Text>
+            <Text style={styles.locationText} numberOfLines={1}>{hotel.location}</Text>
           </View>
           <View style={styles.amenityRow}>
             {displayAmenities.map(a => (
-              <View key={a} style={styles.amenityIconCircle}>
-                <Icon
-                  name={AMENITY_ICONS[a] || 'checkmark-circle-outline'}
-                  style={styles.amenityIcon}
-                />
-              </View>
+              <Icon
+                key={a}
+                name={AMENITY_ICONS[a] || 'checkmark-circle-outline'}
+                style={styles.amenityIcon}
+              />
             ))}
           </View>
+        </View>
+      </View>
+
+      {/* Price Footer */}
+      <View style={styles.priceFooter}>
+        <Text style={styles.priceLabel}>{t('hotels.totalCheapestPrice')}</Text>
+        <View style={styles.priceValueRow}>
+          <Text style={styles.priceValue}>{formatPrice(hotel.priceMin)}</Text>
+          <Text style={styles.priceUnit}>{t('hotels.perNight')}</Text>
         </View>
       </View>
     </TouchableOpacity>

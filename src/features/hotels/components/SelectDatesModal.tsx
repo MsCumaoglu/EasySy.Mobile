@@ -23,6 +23,7 @@ interface CalendarMonthProps {
   month: number;
   selectedStart: string | null;
   selectedEnd: string | null;
+  minDate: string;
   onDayPress: (dateStr: string) => void;
   colors: any;
   spacing: any;
@@ -35,6 +36,7 @@ const CalendarMonth: React.FC<CalendarMonthProps> = ({
   month,
   selectedStart,
   selectedEnd,
+  minDate,
   onDayPress,
   colors,
   spacing,
@@ -127,6 +129,7 @@ const CalendarMonth: React.FC<CalendarMonthProps> = ({
 
   for (let day = 1; day <= daysInMonth; day++) {
     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const isPast = dateStr < minDate;
     const isStart = dateStr === selectedStart;
     const isEnd = dateStr === selectedEnd;
     const isSelected = isStart || isEnd;
@@ -136,15 +139,16 @@ const CalendarMonth: React.FC<CalendarMonthProps> = ({
       <TouchableOpacity
         key={day}
         style={styles.dayCell}
-        onPress={() => onDayPress(dateStr)}
-        activeOpacity={0.7}>
-        {isInRange && <View style={styles.rangeHighlight} />}
+        onPress={() => !isPast && onDayPress(dateStr)}
+        activeOpacity={isPast ? 1 : 0.7}>
+        {isInRange && !isPast && <View style={styles.rangeHighlight} />}
         {isStart && selectedEnd && <View style={[styles.rangeHighlight, styles.rangeHighlightStart]} />}
         {isEnd && selectedStart && <View style={[styles.rangeHighlight, styles.rangeHighlightEnd]} />}
         <View style={[styles.dayCircle, isSelected && styles.selectedCircle]}>
           <Text
             style={[
               styles.dayText,
+              isPast && {color: colors.textSecondary, opacity: 0.3},
               isSelected && styles.selectedDayText,
               !isSelected && isInRange && styles.inRangeDayText,
             ]}>
@@ -189,7 +193,16 @@ const SelectDatesModal: React.FC<SelectDatesModalProps> = ({
   const [tempStart, setTempStart] = useState<string | null>(initialStart);
   const [tempEnd, setTempEnd] = useState<string | null>(initialEnd);
 
+  const today = dayjs();
+  const todayStr = today.format('YYYY-MM-DD');
+
+  const monthsToRender = Array.from({length: 12}).map((_, i) => {
+    const d = today.add(i, 'month');
+    return {year: d.year(), month: d.month() + 1};
+  });
+
   const handleDayPress = (dateStr: string) => {
+    if (dateStr < todayStr) return;
     if (!tempStart || (tempStart && tempEnd)) {
       setTempStart(dateStr);
       setTempEnd(null);
@@ -338,28 +351,21 @@ const SelectDatesModal: React.FC<SelectDatesModalProps> = ({
 
                 <ScrollView style={styles.scrollArea} showsVerticalScrollIndicator={false}>
                     <View style={styles.calendarsContent}>
-                        <CalendarMonth
-                            year={2026}
-                            month={4}
-                            selectedStart={tempStart}
-                            selectedEnd={tempEnd}
-                            onDayPress={handleDayPress}
-                            colors={colors}
-                            spacing={spacing}
-                            radius={radius}
-                            typography={typography}
-                        />
-                        <CalendarMonth
-                            year={2026}
-                            month={5}
-                            selectedStart={tempStart}
-                            selectedEnd={tempEnd}
-                            onDayPress={handleDayPress}
-                            colors={colors}
-                            spacing={spacing}
-                            radius={radius}
-                            typography={typography}
-                        />
+                        {monthsToRender.map((m, idx) => (
+                            <CalendarMonth
+                                key={`${m.year}-${m.month}`}
+                                year={m.year}
+                                month={m.month}
+                                selectedStart={tempStart}
+                                selectedEnd={tempEnd}
+                                minDate={todayStr}
+                                onDayPress={handleDayPress}
+                                colors={colors}
+                                spacing={spacing}
+                                radius={radius}
+                                typography={typography}
+                            />
+                        ))}
                     </View>
                 </ScrollView>
 

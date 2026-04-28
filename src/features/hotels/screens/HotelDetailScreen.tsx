@@ -731,25 +731,28 @@ const HotelDetailScreen: React.FC = () => {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* ── Hotel Name + Rating ── */}
         <View style={styles.infoCard}>
+          {/* Line 1: Name + Category Stars */}
           <View style={styles.nameRatingRow}>
             <Text style={styles.hotelNameTop} numberOfLines={1}>{hotel.name}</Text>
-            <View style={styles.ratingGroup}>
-              <Text style={styles.ratingValueText}>{hotel.rating.toFixed(1)}</Text>
-              <Icon name="star" style={styles.ratingStarTop} />
+            <View style={{flexDirection: 'row', gap: 2, marginLeft: 8}}>
+              {Array.from({ length: hotel.starRating || 0 }).map((_, i) => (
+                <Icon key={`cat-star-${i}`} name="star" style={{fontSize: 14, color: '#F5A623'}} />
+              ))}
             </View>
           </View>
+
+          {/* Line 2: Location + Rating */}
           <View style={styles.locationPriceRow}>
             <View style={styles.locationLeftGroup}>
               <Icon name="location" style={styles.locationPinIcon} />
-              <Text style={styles.locationTopText}>{hotel.location}</Text>
+              <Text style={styles.locationTopText}>
+                {hotel.address ? `${hotel.district}, ${hotel.city}` : hotel.location}
+              </Text>
             </View>
-            {hotel.priceMin > 0 && (
-              <View style={styles.priceBadge}>
-                <Text style={styles.priceBadgeText}>
-                  {formatPrice(hotel.priceMin)}
-                </Text>
-              </View>
-            )}
+            <View style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
+              <Text style={{fontSize: 16, fontWeight: '700', color: colors.textPrimary}}>{hotel.rating.toFixed(1)}</Text>
+              <Icon name="star" style={{fontSize: 16, color: colors.textPrimary}} />
+            </View>
           </View>
         </View>
 
@@ -874,7 +877,7 @@ const HotelDetailScreen: React.FC = () => {
       {/* Footer */}
       <View style={styles.footer}>
         <PrimaryButton
-          label={t('common.rooms')}
+          label={t('hotels.roomsAndPrices')}
           onPress={() => navigation.navigate('HotelRooms', {hotelId: hotel.id, hotelName: hotel.name})}
           style={styles.bookBtn}
           variant="filled"
