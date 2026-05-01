@@ -20,6 +20,9 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import {useTheme} from '../../../app/providers/ThemeProvider';
 import {useRTL} from '../../../core/hooks/useRTL';
 import {userAtom} from '../../../core/auth/authAtoms';
+import {useProfile} from '../hooks/useProfile';
+import {useUpdateProfile} from '../hooks/useUpdateProfile';
+import {ActivityIndicator} from 'react-native';
 
 const ProfileEditScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -27,9 +30,33 @@ const ProfileEditScreen: React.FC = () => {
   const {colors, spacing, radius, typography} = useTheme();
   const {isRTL, flipIcon} = useRTL();
   const user = useAtomValue(userAtom);
+  
+  const {data: profile, isLoading} = useProfile();
+  const updateProfile = useUpdateProfile();
 
-  const [name, setName] = useState(user?.name || '');
-  const [phone, setPhone] = useState('+1 234 567 8900');
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+
+  // Update local state when profile is loaded
+  React.useEffect(() => {
+    if (profile) {
+      setName(profile.displayName || user?.name || '');
+      setPhone(profile.phone || '');
+    } else if (user) {
+      setName(user.name || '');
+    }
+  }, [profile, user]);
+
+  const handleSave = () => {
+    updateProfile.mutate({
+      displayName: name,
+      phone: phone,
+    }, {
+      onSuccess: () => {
+        navigation.goBack();
+      }
+    });
+  };
 
   const styles = StyleSheet.create({
     safeArea: {flex: 1, backgroundColor: colors.background},
@@ -133,8 +160,12 @@ const ProfileEditScreen: React.FC = () => {
           title={t('settings.editProfile', {defaultValue: 'Edit Profile'})}
           containerStyle={{paddingBottom: spacing.md}}
           rightNode={
-            <TouchableOpacity style={styles.saveBtn} onPress={() => navigation.goBack()}>
-              <Text style={styles.saveBtnText}>{t('common.save', {defaultValue: 'Save'})}</Text>
+            <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={updateProfile.isPending}>
+              {updateProfile.isPending ? (
+                <ActivityIndicator color={colors.white} size="small" />
+              ) : (
+                <Text style={styles.saveBtnText}>{t('common.save', {defaultValue: 'Save'})}</Text>
+              )}
             </TouchableOpacity>
           }
         />
@@ -177,7 +208,7 @@ const ProfileEditScreen: React.FC = () => {
               <Icon name="mail-outline" style={styles.inputIcon} />
               <TextInput
                 style={[styles.input, styles.inputDisabled]}
-                value={user?.email || ''}
+                value={profile?.email || user?.email || ''}
                 editable={false}
                 pointerEvents="none"
               />

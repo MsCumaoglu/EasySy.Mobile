@@ -1,4 +1,5 @@
 import axios, {InternalAxiosRequestConfig} from 'axios';
+import auth from '@react-native-firebase/auth';
 import {API_CONFIG} from './apiConfig';
 import i18n from '../../localization/i18n';
 
@@ -13,7 +14,7 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
+  async (config: InternalAxiosRequestConfig) => {
     /**
      * LANGUAGE HEADER
      * Sends the user's selected language so the backend returns localized data.
@@ -29,7 +30,9 @@ apiClient.interceptors.request.use(
       const url = config.url || '';
       
       // Route to correct microservice based on endpoint prefix
-      if (url.startsWith('/api/v1')) {
+      if (url.startsWith('/api/v1/profiles')) {
+        config.baseURL = API_CONFIG.DEV_SERVICES.profile;
+      } else if (url.startsWith('/api/v1/hotels') || url.startsWith('/api/v1/translations')) {
         config.baseURL = API_CONFIG.DEV_SERVICES.hotel;
       } else if (url.startsWith('/bus')) {
         config.baseURL = API_CONFIG.DEV_SERVICES.bus;
@@ -44,9 +47,18 @@ apiClient.interceptors.request.use(
       config.baseURL = API_CONFIG.PRODUCTION_GATEWAY_URL;
     }
 
-    // TODO: Add Token Injection here when backend Auth is ready
-    // const token = await getAuthToken();
-    // if (token) config.headers.Authorization = `Bearer ${token}`;
+    // Token Injection
+    try {
+      const currentUser = auth().currentUser;
+      if (currentUser) {
+        const token = await currentUser.getIdToken();
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to get auth token', e);
+    }
 
     return config;
   },

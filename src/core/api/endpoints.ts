@@ -10,4 +10,7 @@ export const ENDPOINTS = {
     SEARCH: '/api/v1/bus/search',
     DETAIL: (id: string) => `/api/v1/bus/${id}`,
   },
+  PROFILE: {
+    ME: '/api/v1/profiles/me',
+  },
 } as const;

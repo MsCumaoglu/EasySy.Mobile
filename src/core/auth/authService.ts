@@ -1,5 +1,6 @@
 import auth from '@react-native-firebase/auth';
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import { profileService } from '../api/services/profileService';
 
 GoogleSignin.configure({
   webClientId: '1030948704390-782kvho2mb36n74a66j52cpi5gemcc44.apps.googleusercontent.com', // From Firebase Console Web Client ID
@@ -24,7 +25,16 @@ export const authService = {
       const googleCredential = auth.GoogleAuthProvider.credential(idToken);
 
       // Sign-in the user with the credential
-      return auth().signInWithCredential(googleCredential);
+      const userCredential = await auth().signInWithCredential(googleCredential);
+
+      // Trigger profile auto-creation or fetch
+      try {
+        await profileService.getMe();
+      } catch (e) {
+        console.warn('Failed to fetch/create profile on login:', e);
+      }
+
+      return userCredential;
     } catch (error: any) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         console.log('User cancelled the login flow');

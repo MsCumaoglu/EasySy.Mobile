@@ -12,5 +12,6 @@ export const API_CONFIG = {
     hotel: 'https://easysy-gateway-966zw79x.ew.gateway.dev',
     bus: 'https://easysy-gateway-966zw79x.ew.gateway.dev',
     tour: 'https://easysy-gateway-966zw79x.ew.gateway.dev',
+    profile: 'https://easysy-gateway-966zw79x.ew.gateway.dev',
   }
 };

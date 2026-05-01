@@ -25,6 +25,7 @@ import {userAtom, isGuestAtom} from '../../../core/auth/authAtoms';
 import {authService} from '../../../core/auth/authService';
 import {useRTL} from '../../../core/hooks/useRTL';
 import i18n from '../../../localization/i18n';
+import {useProfile} from '../hooks/useProfile';
 
 type SettingsNavProp = NativeStackNavigationProp<RootStackParamList, 'Settings'>;
 
@@ -63,6 +64,8 @@ const SettingsScreen: React.FC = () => {
   const [user, setUser] = useAtom(userAtom);
   const [, setGuest] = useAtom(isGuestAtom);
   const {isRTL, flipIcon} = useRTL();
+  
+  const {data: profile} = useProfile();
 
   const [activeModal, setActiveModal] = useState<'language' | 'theme' | 'currency' | null>(null);
 
@@ -345,8 +348,8 @@ const SettingsScreen: React.FC = () => {
               />
             </View>
             <View style={styles.googleProfileTextWrap}>
-              <Text style={styles.googleProfileName}>{user.name}</Text>
-              <Text style={styles.googleProfileEmail}>{user.email}</Text>
+              <Text style={styles.googleProfileName}>{profile?.displayName || user.name}</Text>
+              <Text style={styles.googleProfileEmail}>{profile?.email || user.email}</Text>
             </View>
           </View>
         ) : (
