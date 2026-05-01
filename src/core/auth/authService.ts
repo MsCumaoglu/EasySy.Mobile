@@ -3,7 +3,7 @@ import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-si
 
 GoogleSignin.configure({
   webClientId: '1030948704390-782kvho2mb36n74a66j52cpi5gemcc44.apps.googleusercontent.com', // From Firebase Console Web Client ID
-  iosClientId: '1030948704390-cv9tmanu01iisnla9lq3rqse7d6gtf9d.apps.googleusercontent.com', // From GoogleService-Info.plist CLIENT_ID
+  iosClientId: '1030948704390-iquocfoqd6q5p596i17rgou1lihn11aj.apps.googleusercontent.com', // From GoogleService-Info.plist CLIENT_ID
 });
 
 export const authService = {
