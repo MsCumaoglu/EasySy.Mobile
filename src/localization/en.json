@@ -229,5 +229,12 @@
     "arabic": "العربية",
     "appVersion": "App Version",
     "version": "1.0.0"
+  },
+  "roles": {
+    "CONSUMER": "Consumer",
+    "HOTEL_OWNER": "Hotel Owner",
+    "BUS_OPERATOR": "Bus Operator",
+    "WORKER": "Worker",
+    "SUPER_ADMIN": "Super Admin"
   }
 }

@@ -227,5 +227,12 @@
     "arabic": "العربية",
     "appVersion": "Uygulama Versiyonu",
     "version": "1.0.0"
+  },
+  "roles": {
+    "CONSUMER": "Tüketici",
+    "HOTEL_OWNER": "Otel Sahibi",
+    "BUS_OPERATOR": "Otobüs İşletmecisi",
+    "WORKER": "Çalışan",
+    "SUPER_ADMIN": "Süper Yönetici"
   }
 }

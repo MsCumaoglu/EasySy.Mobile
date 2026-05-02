@@ -226,5 +226,12 @@
     "arabic": "العربية",
     "appVersion": "إصدار التطبيق",
     "version": "1.0.0"
+  },
+  "roles": {
+    "CONSUMER": "مستهلك",
+    "HOTEL_OWNER": "مالك فندق",
+    "BUS_OPERATOR": "مشغل حافلة",
+    "WORKER": "عامل",
+    "SUPER_ADMIN": "مدير متميز"
   }
 }

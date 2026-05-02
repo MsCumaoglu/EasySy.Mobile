@@ -13,6 +13,8 @@ export interface ProfileResponse {
   preferredLang: string;
   preferredCurrency: string;
   theme: string | null;
+  organizationId?: string | null;
+  organizationType?: string | null;
   createdAt: string;
   updatedAt: string;
 }
