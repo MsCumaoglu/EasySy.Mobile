@@ -27,14 +27,15 @@ export const authService = {
       // Sign-in the user with the credential
       const userCredential = await auth().signInWithCredential(googleCredential);
 
+      let profile = null;
       // Trigger profile auto-creation or fetch
       try {
-        await profileService.getMe();
+        profile = await profileService.getMe();
       } catch (e) {
         console.warn('Failed to fetch/create profile on login:', e);
       }
 
-      return userCredential;
+      return { userCredential, profile };
     } catch (error: any) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         console.log('User cancelled the login flow');

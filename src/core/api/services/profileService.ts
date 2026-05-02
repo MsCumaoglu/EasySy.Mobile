@@ -8,8 +8,11 @@ export interface ProfileResponse {
   avatarUrl: string | null;
   phone: string | null;
   email: string | null;
+  role: string | null;
+  roles: string[];
   preferredLang: string;
   preferredCurrency: string;
+  theme: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -20,6 +23,7 @@ export interface UpdateProfileRequest {
   phone?: string;
   preferredLang?: string;
   preferredCurrency?: string;
+  theme?: string;
 }
 
 export const profileService = {

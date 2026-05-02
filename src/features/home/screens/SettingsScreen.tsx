@@ -26,6 +26,7 @@ import {authService} from '../../../core/auth/authService';
 import {useRTL} from '../../../core/hooks/useRTL';
 import i18n from '../../../localization/i18n';
 import {useProfile} from '../hooks/useProfile';
+import {useUpdateProfile} from '../hooks/useUpdateProfile';
 
 type SettingsNavProp = NativeStackNavigationProp<RootStackParamList, 'Settings'>;
 
@@ -66,6 +67,7 @@ const SettingsScreen: React.FC = () => {
   const {isRTL, flipIcon} = useRTL();
   
   const {data: profile} = useProfile();
+  const updateProfile = useUpdateProfile();
 
   const [activeModal, setActiveModal] = useState<'language' | 'theme' | 'currency' | null>(null);
 
@@ -74,6 +76,9 @@ const SettingsScreen: React.FC = () => {
     await i18n.changeLanguage(lang);
     setLanguage(lang);
     setActiveModal(null);
+    if (user) {
+      updateProfile.mutate({ preferredLang: lang });
+    }
   };
 
   const handleLogout = async () => {
@@ -537,6 +542,9 @@ const SettingsScreen: React.FC = () => {
                         {CURRENCIES.map(curr => renderModalOption(`${curr.code} - ${curr.label}`, currency === curr.code, () => {
                           setCurrency(curr.code);
                           setActiveModal(null);
+                          if (user) {
+                            updateProfile.mutate({ preferredCurrency: curr.code });
+                          }
                         }, undefined, undefined, curr.symbol))}
                       </View>
                     </>
@@ -551,6 +559,9 @@ const SettingsScreen: React.FC = () => {
                         {THEMES.map(th => renderModalOption(t(th.labelKey, {defaultValue: th.labelKey}), theme === th.code, () => {
                           setTheme(th.code as any);
                           setActiveModal(null);
+                          if (user) {
+                            updateProfile.mutate({ theme: th.code });
+                          }
                         }, th.icon))}
                       </View>
                     </>

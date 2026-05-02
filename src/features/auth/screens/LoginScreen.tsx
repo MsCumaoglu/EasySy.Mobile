@@ -13,6 +13,7 @@ import {useTranslation} from 'react-i18next';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {useTheme} from '../../../app/providers/ThemeProvider';
 import {isGuestAtom, userAtom} from '../../../core/auth/authAtoms';
+import {appLanguageAtom, appCurrencyAtom, appThemeAtom} from '../../../state/appAtoms';
 import {authService} from '../../../core/auth/authService';
 
 // For now we use the illustration as the logo
@@ -24,10 +25,13 @@ const LoginScreen: React.FC = () => {
   
   const [, setGuest] = useAtom(isGuestAtom);
   const [, setUser] = useAtom(userAtom);
+  const [, setLanguage] = useAtom(appLanguageAtom);
+  const [, setCurrency] = useAtom(appCurrencyAtom);
+  const [, setTheme] = useAtom(appThemeAtom);
 
   const handleGoogleLogin = async () => {
     try {
-      const userCredential = await authService.signInWithGoogle();
+      const { userCredential, profile } = await authService.signInWithGoogle();
       
       const firebaseUser = userCredential.user;
       
@@ -37,6 +41,20 @@ const LoginScreen: React.FC = () => {
         email: firebaseUser.email || '',
         photoUrl: firebaseUser.photoURL || undefined,
       });
+
+      if (profile) {
+        if (profile.preferredLang) {
+          setLanguage(profile.preferredLang as any);
+          import('../../../localization/i18n').then(m => m.default.changeLanguage(profile.preferredLang));
+        }
+        if (profile.preferredCurrency) {
+          setCurrency(profile.preferredCurrency as any);
+        }
+        if (profile.theme) {
+          setTheme(profile.theme as any);
+        }
+      }
+
       // Ensure guest mode is off if logged in
       setGuest(false);
     } catch (e) {
