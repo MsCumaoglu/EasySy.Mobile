@@ -16,7 +16,6 @@ export const authService = {
       // Get the users ID token
       const signInResult = await GoogleSignin.signIn();
       const idToken = signInResult.data?.idToken;
-
       if (!idToken) {
         throw new Error('No ID token found');
       }
@@ -29,10 +28,23 @@ export const authService = {
 
       let profile = null;
       // Trigger profile auto-creation or fetch
+      // This call also triggers the Profile Service to sync roles to Firebase
       try {
         profile = await profileService.getMe();
       } catch (e) {
         console.warn('Failed to fetch/create profile on login:', e);
+      }
+
+      // CRITICAL: Force-refresh the Firebase token AFTER profile creation.
+      // The Profile Service just synced our role to Firebase Custom Claims,
+      // but our current token was issued BEFORE that sync happened.
+      // getIdToken(true) forces Firebase to issue a new token with the updated claims.
+      try {
+        const refreshedToken = await auth().currentUser?.getIdToken(true);
+        console.log('[Auth] Token refreshed after profile sync');
+        console.log('[Auth] Refreshed token:', refreshedToken);
+      } catch (e) {
+        console.warn('[Auth] Token refresh failed (role may be missing until next refresh):', e);
       }
 
       return { userCredential, profile };

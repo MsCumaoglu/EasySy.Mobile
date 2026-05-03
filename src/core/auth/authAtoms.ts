@@ -6,6 +6,8 @@ export type User = {
   name: string;
   email: string;
   photoUrl?: string;
+  role: string | null;
+  organizationId?: string | null;
 };
 
 // Onboarding persistence

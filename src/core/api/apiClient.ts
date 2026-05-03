@@ -72,7 +72,33 @@ apiClient.interceptors.response.use(
     // Return data directly so services don't have to call response.data
     return response.data;
   },
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
+
+    // If the error is 403 and we haven't retried yet
+    if (error.response?.status === 403 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const currentUser = auth().currentUser;
+        if (currentUser) {
+          console.log('--- 403 Detected: Forcing Token Refresh to pick up new roles ---');
+          // Force refresh the token to pick up new Custom Claims (roles)
+          const newToken = await currentUser.getIdToken(true);
+          
+          console.log('--- Refreshed Token: ---');
+          console.log(newToken);
+          console.log('-------------------------');
+
+          // Update the Authorization header and retry
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          return apiClient(originalRequest);
+        }
+      } catch (refreshError) {
+        console.error('Failed to refresh token after 403', refreshError);
+      }
+    }
+
     // Handle global API errors here (e.g. 401 Unauthorized -> redirect to login)
     return Promise.reject(error);
   }

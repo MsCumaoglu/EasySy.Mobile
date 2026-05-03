@@ -7,22 +7,23 @@ import {
   StatusBar,
   Image,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useAtom} from 'jotai';
-import {useTranslation} from 'react-i18next';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAtom } from 'jotai';
+import { useTranslation } from 'react-i18next';
 import Icon from 'react-native-vector-icons/Ionicons';
-import {useTheme} from '../../../app/providers/ThemeProvider';
-import {isGuestAtom, userAtom} from '../../../core/auth/authAtoms';
-import {appLanguageAtom, appCurrencyAtom, appThemeAtom} from '../../../state/appAtoms';
-import {authService} from '../../../core/auth/authService';
+import { useTheme } from '../../../app/providers/ThemeProvider';
+import { isGuestAtom, userAtom } from '../../../core/auth/authAtoms';
+import { appLanguageAtom, appCurrencyAtom, appThemeAtom } from '../../../state/appAtoms';
+import { authService } from '../../../core/auth/authService';
+import i18n from '../../../localization/i18n';
 
 // For now we use the illustration as the logo
 const logoImage = require('../../../assets/images/home/logo.png');
 
 const LoginScreen: React.FC = () => {
-  const {colors, spacing, radius, typography, isDark} = useTheme();
-  const {t} = useTranslation();
-  
+  const { colors, spacing, radius, typography, isDark } = useTheme();
+  const { t } = useTranslation();
+
   const [, setGuest] = useAtom(isGuestAtom);
   const [, setUser] = useAtom(userAtom);
   const [, setLanguage] = useAtom(appLanguageAtom);
@@ -32,20 +33,22 @@ const LoginScreen: React.FC = () => {
   const handleGoogleLogin = async () => {
     try {
       const { userCredential, profile } = await authService.signInWithGoogle();
-      
+
       const firebaseUser = userCredential.user;
-      
+
       setUser({
         id: firebaseUser.uid,
         name: firebaseUser.displayName || 'Google User',
         email: firebaseUser.email || '',
         photoUrl: firebaseUser.photoURL || undefined,
+        role: profile?.role || 'CONSUMER',
+        organizationId: profile?.organizationId || undefined,
       });
 
       if (profile) {
         if (profile.preferredLang) {
           setLanguage(profile.preferredLang as any);
-          import('../../../localization/i18n').then(m => m.default.changeLanguage(profile.preferredLang));
+          i18n.changeLanguage(profile.preferredLang);
         }
         if (profile.preferredCurrency) {
           setCurrency(profile.preferredCurrency as any);
@@ -101,7 +104,7 @@ const LoginScreen: React.FC = () => {
       borderWidth: 1,
       borderColor: isDark ? colors.border : '#E0E0E0',
       shadowColor: '#000',
-      shadowOffset: {width: 0, height: 2},
+      shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.05,
       shadowRadius: 4,
       elevation: 2,
@@ -133,29 +136,29 @@ const LoginScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
-      
+
       <View style={styles.container}>
-        
+
         <View style={styles.logoContainer}>
           <Image source={logoImage} style={styles.logo} />
           <Text style={styles.subtitle}>Explore the world with ease.</Text>
         </View>
 
-        <TouchableOpacity 
-          style={styles.googleBtn} 
+        <TouchableOpacity
+          style={styles.googleBtn}
           activeOpacity={0.7}
           onPress={handleGoogleLogin}
         >
           <Icon name="logo-google" style={styles.googleIcon} />
-          <Text style={styles.googleBtnText}>{t('auth.continueWithGoogle', {defaultValue: 'Continue with Google'})}</Text>
+          <Text style={styles.googleBtnText}>{t('auth.continueWithGoogle', { defaultValue: 'Continue with Google' })}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.guestBtn} 
+        <TouchableOpacity
+          style={styles.guestBtn}
           activeOpacity={0.7}
           onPress={handleContinueAsGuest}
         >
-          <Text style={styles.guestBtnText}>{t('auth.continueAsGuest', {defaultValue: 'Continue as Guest'})}</Text>
+          <Text style={styles.guestBtnText}>{t('auth.continueAsGuest', { defaultValue: 'Continue as Guest' })}</Text>
         </TouchableOpacity>
 
       </View>
