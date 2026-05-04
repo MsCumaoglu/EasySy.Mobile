@@ -16,14 +16,19 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {RootStackParamList} from '../../../app/navigation/types';
 import {useTheme} from '../../../app/providers/ThemeProvider';
 import {appThemeAtom} from '../../../state/appAtoms';
+import {userAtom, isGuestAtom} from '../../../core/auth/authAtoms';
+import {authService} from '../../../core/auth/authService';
+import {useProfile} from '../hooks/useProfile';
 import {useRTL} from '../../../core/hooks/useRTL';
 import HomeButtonCard from '../components/HomeButtonCard';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { Modal, TouchableWithoutFeedback, SafeAreaView as RNSafeAreaView } from 'react-native';
 
 const hotelImage = require('../../../assets/images/home/hotel.png');
 const busImage   = require('../../../assets/images/home/bus.png');
 const toursImage = require('../../../assets/images/home/history.png');
 const logoImage  = require('../../../assets/images/home/logo.png');
+const adminImage = require('../../../assets/images/home/admin.png');
 
 type HomeNavProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -31,11 +36,12 @@ const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeNavProp>();
   const {t} = useTranslation();
   const {colors, spacing, radius, typography, isDark} = useTheme();
-  const [theme, setTheme] = useAtom(appThemeAtom);
-  const {isRTL} = useRTL();
-
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
+  const [user, setUser] = useAtom(userAtom);
+  const [, setGuest] = useAtom(isGuestAtom);
+  const {data: profile} = useProfile();
+  const {isRTL, flipIcon} = useRTL();
+  const handleLoginNav = () => {
+    setGuest(false);
   };
 
   const styles = StyleSheet.create({
@@ -90,6 +96,8 @@ const HomeScreen: React.FC = () => {
     },
     gridItem: {flex: 1},
     gridSpacer: {width: spacing.lg},
+    
+
   });
 
   return (
@@ -101,13 +109,27 @@ const HomeScreen: React.FC = () => {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header Top Row */}
         <View style={styles.headerTopRow}>
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => navigation.navigate('Settings')}>
-            <Icon name="settings-outline" style={styles.iconText} />
+          <TouchableOpacity style={[styles.iconButton, {alignItems: 'flex-start'}]} onPress={() => {
+            if (user) {
+              navigation.navigate('ProfileMenu' as any);
+            } else {
+              handleLoginNav();
+            }
+          }}>
+            {user ? (
+              <Image 
+                source={{uri: user.photoUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name)}} 
+                style={{width: 36, height: 36, borderRadius: 18}} 
+              />
+            ) : (
+              <Icon name="person-circle" style={{fontSize: 36, color: colors.primary}} />
+            )}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton} onPress={toggleTheme}>
-            <Icon name={isDark ? 'sunny-outline' : 'moon-outline'} style={styles.iconText} />
+          <View style={{flex: 1}} /> {/* Empty View to push notification to right */}
+          <TouchableOpacity style={[styles.iconButton, {alignItems: 'flex-end'}]} onPress={() => {
+            // TODO: Navigate to Notifications
+          }}>
+            <Icon name="notifications-outline" style={styles.iconText} />
           </TouchableOpacity>
         </View>
 
@@ -149,6 +171,24 @@ const HomeScreen: React.FC = () => {
             description={t('home.toursDesc')}
             onPress={() => {}}
           />
+
+          {user && profile?.role && profile.role !== 'CONSUMER' ? (
+            <View style={{ marginTop: spacing.lg }}>
+              <HomeButtonCard
+                variant="horizontal"
+                image={adminImage}
+                title={t('home.management', {defaultValue: 'Yönetim'})}
+                description={
+                  profile.role === 'SUPER_ADMIN'
+                    ? t('home.adminSuperDesc', {defaultValue: 'Herşeyi yönet'})
+                    : t('home.adminOwnerDesc', {defaultValue: 'Organizasyonunu yönet'})
+                }
+                onPress={() => {
+                  // TODO: Navigate to Admin screen
+                }}
+              />
+            </View>
+          ) : null}
         </View>
       </ScrollView>
     </SafeAreaView>

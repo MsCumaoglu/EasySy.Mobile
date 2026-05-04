@@ -18,6 +18,7 @@ export type RootStackParamList = {
   Home: undefined;
   Settings: undefined;
   ProfileEdit: undefined;
+  ProfileMenu: undefined;
   HotelStack: NavigatorScreenParams<HotelStackParamList>;
   BusStack: NavigatorScreenParams<BusStackParamList>;
 };

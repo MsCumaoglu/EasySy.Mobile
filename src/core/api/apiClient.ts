@@ -51,7 +51,7 @@ apiClient.interceptors.request.use(
     try {
       const currentUser = auth().currentUser;
       if (currentUser) {
-        const token = await currentUser.getIdToken();
+        const token = await currentUser.getIdToken(true); // Force refresh for latest claims
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }

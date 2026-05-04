@@ -2,12 +2,14 @@ import React, {useEffect} from 'react';
 import {I18nManager} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
-import {useAtomValue} from 'jotai';
+import {useAtomValue, useSetAtom} from 'jotai';
+import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import JotaiProvider from './providers/RecoilProvider';
 import ThemeProvider from './providers/ThemeProvider';
 import QueryProvider from './providers/QueryProvider';
 import RootNavigator from './navigation/RootNavigator';
 import {appLanguageAtom} from '../state/appAtoms';
+import {userAtom, isGuestAtom} from '../core/auth/authAtoms';
 import i18n from '../localization/i18n';
 import '../localization/i18n';
 import {initDB} from '../core/database/db';
@@ -25,6 +27,8 @@ import {initDB} from '../core/database/db';
  */
 const AppContent: React.FC = () => {
   const language = useAtomValue(appLanguageAtom);
+  const setUser = useSetAtom(userAtom);
+  const setGuest = useSetAtom(isGuestAtom);
 
   useEffect(() => {
     // 1. Sync i18n
@@ -37,6 +41,33 @@ const AppContent: React.FC = () => {
     const needsRTL = language === 'ar';
     I18nManager.forceRTL(needsRTL);
   }, [language]);
+
+  /**
+   * Firebase Auth State Listener
+   * - Restores session on app cold-start (Firebase persists sessions automatically)
+   * - Clears user state when token expires or user signs out from another device
+   * - Prevents stale MMKV user data from keeping the user "logged in" after sign-out
+   */
+  useEffect(() => {
+    const unsubscribe = auth().onAuthStateChanged(
+      (firebaseUser: FirebaseAuthTypes.User | null) => {
+        if (firebaseUser) {
+          // Firebase has a valid session — sync to Jotai
+          setUser({
+            id: firebaseUser.uid,
+            name: firebaseUser.displayName || 'User',
+            email: firebaseUser.email || '',
+            photoUrl: firebaseUser.photoURL || undefined,
+          });
+        } else {
+          // Firebase session ended — clear user (but don't touch guest mode)
+          setUser(null);
+        }
+      },
+    );
+
+    return unsubscribe;
+  }, [setUser, setGuest]);
 
   return (
     <ThemeProvider>

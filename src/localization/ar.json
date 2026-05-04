@@ -68,6 +68,9 @@
     "busesDesc": "سفر موثوق بين المدن",
     "tours": "الجولات",
     "toursDesc": "جولات منتقاة للمسافر العصري.",
+    "management": "الإدارة",
+    "adminSuperDesc": "إدارة كل شيء",
+    "adminOwnerDesc": "إدارة مؤسستك",
     "settings": "الإعدادات"
   },
   "hotels": {

@@ -5,8 +5,8 @@ import {RootStackParamList} from './types';
 import {userAtom, isGuestAtom} from '../../core/auth/authAtoms';
 
 import HomeScreen from '../../features/home/screens/HomeScreen';
-import SettingsScreen from '../../features/home/screens/SettingsScreen';
 import ProfileEditScreen from '../../features/home/screens/ProfileEditScreen';
+import ProfileMenuScreen from '../../features/home/screens/ProfileMenuScreen';
 import LoginScreen from '../../features/auth/screens/LoginScreen';
 import HotelNavigator from './HotelNavigator';
 import BusNavigator from './BusNavigator';
@@ -24,8 +24,8 @@ const RootNavigator: React.FC = () => {
       ) : (
         <>
           <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen name="Settings" component={SettingsScreen} />
           <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
+          <Stack.Screen name="ProfileMenu" component={ProfileMenuScreen} />
           <Stack.Screen name="HotelStack" component={HotelNavigator} />
           <Stack.Screen name="BusStack" component={BusNavigator} />
         </>
