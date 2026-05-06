@@ -103,6 +103,10 @@
     "spa": "سبا",
     "gym": "صالة رياضية",
     "ac": "تكييف هواء",
+    "maxAdults": "الحد الأقصى للبالغين",
+    "maxChildren": "الحد الأقصى للأطفال",
+    "privateBath": "حمام خاص",
+    "balcony": "شرفة",
     "breakfast": "إفطار",
     "tabs": {
       "detail": "تفاصيل",
@@ -114,6 +118,7 @@
     "description": "الوصف",
     "reviews": "مراجعات الضيوف",
     "hotelList": "قائمة الفنادق",
+    "roomsList": "الغرف المتاحة",
     "noHotels": "لا توجد فنادق",
     "selectCityOrRegion": "اختر مدينة أو منطقة",
     "checkInCheckOut": "وصول - مغادرة",
@@ -215,6 +220,7 @@
   },
   "settings": {
     "title": "الإعدادات",
+    "editProfile": "تعديل الملف الشخصي",
     "language": "اللغة",
     "languageDesc": "اختر لغتك المفضلة",
     "theme": "المظهر",
@@ -228,7 +234,16 @@
     "turkish": "Türkçe",
     "arabic": "العربية",
     "appVersion": "إصدار التطبيق",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "appSettings": "إعدادات التطبيق",
+    "myBookings": "حجوزاتي",
+    "favorites": "المفضلة",
+    "currency": "العملة",
+    "about": "حول",
+    "privacy": "سياسة الخصوصية",
+    "terms": "شروط الاستخدام",
+    "contact": "اتصل بنا",
+    "logout": "تسجيل الخروج"
   },
   "roles": {
     "CONSUMER": "مستهلك",
@@ -236,5 +251,18 @@
     "BUS_OPERATOR": "مشغل حافلة",
     "WORKER": "عامل",
     "SUPER_ADMIN": "مدير متميز"
+  },
+  "profile": {
+    "fullName": "الاسم الكامل",
+    "email": "عنوان البريد الإلكتروني",
+    "phone": "رقم الهاتف",
+    "googleLinked": "مسجل الدخول عبر جوجل",
+    "googleLinkedDesc": "تتم إدارة بريدك الإلكتروني وصورة ملفك الشخصي بواسطة جوجل."
+  },
+  "currency": {
+    "usd": "دولار أمريكي",
+    "eur": "يورو",
+    "try": "ليرة تركية",
+    "syp": "ليرة سورية"
   }
 }

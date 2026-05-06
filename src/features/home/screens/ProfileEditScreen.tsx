@@ -66,7 +66,6 @@ const ProfileEditScreen: React.FC = () => {
       paddingVertical: spacing.sm,
       backgroundColor: colors.primary,
       borderRadius: radius.md,
-      marginRight: isRTL ? 'auto' : 0,
     },
     saveBtnText: {
       color: colors.white,
@@ -182,8 +181,8 @@ const ProfileEditScreen: React.FC = () => {
                 />
               </View>
               <View style={styles.googleBannerTextWrap}>
-                <Text style={styles.googleBannerTitle}>Signed in with Google</Text>
-                <Text style={styles.googleBannerSubtitle}>Your email and profile photo are managed by Google.</Text>
+                <Text style={styles.googleBannerTitle}>{t('profile.googleLinked', {defaultValue: 'Signed in with Google'})}</Text>
+                <Text style={styles.googleBannerSubtitle}>{t('profile.googleLinkedDesc', {defaultValue: 'Your email and profile photo are managed by Google.'})}</Text>
               </View>
             </View>
           ) : null}

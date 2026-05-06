@@ -68,7 +68,7 @@ const ScreenHeader: React.FC<ScreenHeaderProps> = ({
       fontSize: 20,
       fontWeight: '800',
       color: colors.textPrimary,
-      textAlign: centered ? 'center' : (isRTL ? 'right' : 'left'),
+      textAlign: centered ? 'center' : 'left',
     },
     rightSpacer: {
       width: 40,

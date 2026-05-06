@@ -104,6 +104,10 @@
     "spa": "Spa",
     "gym": "Spor Salonu",
     "ac": "Klima",
+    "maxAdults": "Maksimum Yetişkin",
+    "maxChildren": "Maksimum Çocuk",
+    "privateBath": "Özel Banyo",
+    "balcony": "Balkon",
     "breakfast": "Kahvaltı",
     "tabs": {
       "detail": "Detay",
@@ -115,6 +119,7 @@
     "description": "Açıklama",
     "reviews": "Misafir Yorumları",
     "hotelList": "Otel Listesi",
+    "roomsList": "Mevcut Odalar",
     "noHotels": "Otel bulunamadı",
     "selectCityOrRegion": "Şehir veya bölge seçin",
     "checkInCheckOut": "Giriş - Çıkış",
@@ -216,6 +221,7 @@
   },
   "settings": {
     "title": "Ayarlar",
+    "editProfile": "Profili Düzenle",
     "language": "Dil",
     "languageDesc": "Tercih ettiğiniz dili seçin",
     "theme": "Tema",
@@ -229,7 +235,16 @@
     "turkish": "Türkçe",
     "arabic": "العربية",
     "appVersion": "Uygulama Versiyonu",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "appSettings": "Uygulama Ayarları",
+    "myBookings": "Rezervasyonlarım",
+    "favorites": "Favorilerim",
+    "currency": "Para Birimi",
+    "about": "Hakkında",
+    "privacy": "Gizlilik Politikası",
+    "terms": "Kullanım Koşulları",
+    "contact": "İletişim",
+    "logout": "Çıkış Yap"
   },
   "roles": {
     "CONSUMER": "Tüketici",
@@ -237,5 +252,18 @@
     "BUS_OPERATOR": "Otobüs İşletmecisi",
     "WORKER": "Çalışan",
     "SUPER_ADMIN": "Süper Yönetici"
+  },
+  "profile": {
+    "fullName": "Ad Soyad",
+    "email": "E-posta Adresi",
+    "phone": "Telefon Numarası",
+    "googleLinked": "Google ile giriş yapıldı",
+    "googleLinkedDesc": "E-posta adresiniz ve profil fotoğrafınız Google tarafından yönetiliyor."
+  },
+  "currency": {
+    "usd": "Amerikan Doları",
+    "eur": "Euro",
+    "try": "Türk Lirası",
+    "syp": "Suriye Lirası"
   }
 }

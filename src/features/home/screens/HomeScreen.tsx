@@ -125,7 +125,7 @@ const HomeScreen: React.FC = () => {
               <Icon name="person-circle" style={{fontSize: 36, color: colors.primary}} />
             )}
           </TouchableOpacity>
-          <View style={{flex: 1}} /> {/* Empty View to push notification to right */}
+          <View style={{flex: 1}} />
           <TouchableOpacity style={[styles.iconButton, {alignItems: 'flex-end'}]} onPress={() => {
             // TODO: Navigate to Notifications
           }}>
@@ -137,8 +137,7 @@ const HomeScreen: React.FC = () => {
         <View style={styles.logoContainer}>
           <Image source={logoImage} style={styles.logoImage} />
           <View style={styles.sloganContainer}>
-            <Text style={styles.sloganText}>{t('home.slogan')}</Text>
-            <Text style={styles.sloganHighlight}>{t('home.sloganHighlight')}</Text>
+            <Text style={styles.sloganText}>{t('home.slogan')}</Text><Text style={styles.sloganHighlight}>{t('home.sloganHighlight')}</Text>
           </View>
         </View>
 
@@ -172,7 +171,7 @@ const HomeScreen: React.FC = () => {
             onPress={() => {}}
           />
 
-          {user && profile?.role && profile.role !== 'CONSUMER' ? (
+          {!!user && !!profile?.role && profile.role !== 'CONSUMER' ? (
             <View style={{ marginTop: spacing.lg }}>
               <HomeButtonCard
                 variant="horizontal"

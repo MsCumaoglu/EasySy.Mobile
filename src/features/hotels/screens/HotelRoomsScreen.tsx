@@ -100,11 +100,11 @@ export default function HotelRoomsScreen() {
           <View style={styles.detailRow}>
             <View style={styles.detailItemRow}>
               <Icon name="person" style={styles.iconOrange} />
-              <Text style={styles.detailTextBlack}>Max Adult {room.maxAdults}</Text>
+              <Text style={styles.detailTextBlack}>{t('hotels.maxAdults', {defaultValue: 'Max Adult'})} {room.maxAdults}</Text>
             </View>
             <View style={styles.detailItemRow}>
               <Icon name="happy" style={styles.iconOrange} />
-              <Text style={styles.detailTextBlack}>Max Children {room.maxChildren}</Text>
+              <Text style={styles.detailTextBlack}>{t('hotels.maxChildren', {defaultValue: 'Max Children'})} {room.maxChildren}</Text>
             </View>
           </View>
 
@@ -129,19 +129,19 @@ export default function HotelRoomsScreen() {
             {room.hasPrivateBathroom && (
               <View style={styles.amenityPill}>
                 <Icon name="water-outline" style={styles.amenityIconOrange} />
-                <Text style={styles.amenityText}>Private Bath</Text>
+                <Text style={styles.amenityText}>{t('hotels.privateBath', {defaultValue: 'Private Bath'})}</Text>
               </View>
             )}
             {room.hasAirConditioning && (
               <View style={styles.amenityPill}>
                 <Icon name="snow-outline" style={styles.amenityIconOrange} />
-                <Text style={styles.amenityText}>AC</Text>
+                <Text style={styles.amenityText}>{t('hotels.ac', {defaultValue: 'AC'})}</Text>
               </View>
             )}
             {room.hasBalcony && (
               <View style={styles.amenityPill}>
                 <Icon name="storefront-outline" style={styles.amenityIconOrange} />
-                <Text style={styles.amenityText}>Balcony</Text>
+                <Text style={styles.amenityText}>{t('hotels.balcony', {defaultValue: 'Balcony'})}</Text>
               </View>
             )}
           </View>
@@ -508,7 +508,7 @@ export default function HotelRoomsScreen() {
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.sectionTitle}>{t('hotels.roomsList') || 'Available Rooms'}</Text>
+      <Text style={styles.sectionTitle}>{t('hotels.roomsList', {defaultValue: 'Available Rooms'})}</Text>
 
       {/* Room List */}
       {isLoading || isFetching ? (

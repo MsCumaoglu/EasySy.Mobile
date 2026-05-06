@@ -105,6 +105,10 @@
     "spa": "Spa",
     "gym": "Gym",
     "ac": "Air Conditioning",
+    "maxAdults": "Max Adult",
+    "maxChildren": "Max Children",
+    "privateBath": "Private Bath",
+    "balcony": "Balcony",
     "breakfast": "Breakfast",
     "tabs": {
       "detail": "Detail",
@@ -218,6 +222,7 @@
   },
   "settings": {
     "title": "Settings",
+    "editProfile": "Edit Profile",
     "language": "Language",
     "languageDesc": "Choose your preferred language",
     "theme": "Theme",
@@ -231,7 +236,16 @@
     "turkish": "Türkçe",
     "arabic": "العربية",
     "appVersion": "App Version",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "appSettings": "App Settings",
+    "myBookings": "My Bookings",
+    "favorites": "My Favorites",
+    "currency": "Currency",
+    "about": "About",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Use",
+    "contact": "Contact Us",
+    "logout": "Logout"
   },
   "roles": {
     "CONSUMER": "Consumer",
@@ -239,5 +253,18 @@
     "BUS_OPERATOR": "Bus Operator",
     "WORKER": "Worker",
     "SUPER_ADMIN": "Super Admin"
+  },
+  "profile": {
+    "fullName": "Full Name",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "googleLinked": "Signed in with Google",
+    "googleLinkedDesc": "Your email and profile photo are managed by Google."
+  },
+  "currency": {
+    "usd": "US Dollar",
+    "eur": "Euro",
+    "try": "Turkish Lira",
+    "syp": "Syrian Pound"
   }
 }

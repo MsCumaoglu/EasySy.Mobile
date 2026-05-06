@@ -33,7 +33,6 @@ type ProfileMenuNavProp = NativeStackNavigationProp<RootStackParamList>;
 
 type Language = {code: AppLanguage; label: string; nativeLabel: string; isRTL: boolean; flag: string};
 type ThemeOption = {code: 'light' | 'dark' | 'system'; labelKey: string; icon: string};
-type CurrencyOption = {code: AppCurrency; label: string; symbol: string};
 
 const LANGUAGES: Language[] = [
   {code: 'en', label: 'English',  nativeLabel: 'English',  isRTL: false, flag: '🇬🇧'},
@@ -47,11 +46,13 @@ const THEMES: ThemeOption[] = [
   {code: 'system', labelKey: 'settings.system', icon: 'phone-portrait-outline'},
 ];
 
+type CurrencyOption = {code: AppCurrency; labelKey: string; symbol: string};
+
 const CURRENCIES: CurrencyOption[] = [
-  {code: 'USD', label: 'US Dollar', symbol: '$'},
-  {code: 'EUR', label: 'Euro', symbol: '€'},
-  {code: 'TRY', label: 'Turkish Lira', symbol: '₺'},
-  {code: 'SYP', label: 'Syrian Pound', symbol: 'SYP'},
+  {code: 'USD', labelKey: 'currency.usd', symbol: '$'},
+  {code: 'EUR', labelKey: 'currency.eur', symbol: '€'},
+  {code: 'TRY', labelKey: 'currency.try', symbol: '₺'},
+  {code: 'SYP', labelKey: 'currency.syp', symbol: 'SYP'},
 ];
 
 const ProfileMenuScreen: React.FC = () => {
@@ -143,6 +144,8 @@ const ProfileMenuScreen: React.FC = () => {
       paddingVertical: 3,
       borderRadius: 6,
       alignSelf: 'flex-start',
+      flexDirection: 'row',
+      alignItems: 'center',
     },
     roleText: {
       ...typography.caption,
@@ -228,14 +231,13 @@ const ProfileMenuScreen: React.FC = () => {
     optionIconWrap: {
       width: 36, height: 36, borderRadius: 18,
       alignItems: 'center', justifyContent: 'center',
-      marginRight: isRTL ? 0 : spacing.md,
-      marginLeft: isRTL ? spacing.md : 0,
+      marginRight: spacing.md,
     },
     optionLabel: {
       flex: 1,
       ...typography.body, color: colors.textPrimary,
       fontWeight: '500', fontSize: 15,
-      textAlign: isRTL ? 'right' : 'left',
+      textAlign: 'left',
     },
     optionValue: {
       ...typography.body, color: colors.textSecondary, fontSize: 13,
@@ -315,13 +317,13 @@ const ProfileMenuScreen: React.FC = () => {
     },
     modalOptionLabel: {
       ...typography.body, fontSize: 16, color: colors.textPrimary, fontWeight: '500',
-      textAlign: isRTL ? 'right' : 'left',
+      textAlign: 'left',
     },
     radioCircle: {
       width: 24, height: 24, borderRadius: 12,
       borderWidth: 2, borderColor: colors.textSecondary,
       alignItems: 'center', justifyContent: 'center',
-      marginLeft: isRTL ? 0 : spacing.md, marginRight: isRTL ? spacing.md : 0,
+      marginLeft: spacing.md,
     },
     radioCircleSelected: {
       borderColor: colors.primary,
@@ -333,7 +335,9 @@ const ProfileMenuScreen: React.FC = () => {
 
   const currentLanguageLabel = LANGUAGES.find(l => l.code === language)?.label || 'English';
   const currentThemeLabel = THEMES.find(t => t.code === theme)?.labelKey || 'settings.light';
-  const currentCurrencyLabel = CURRENCIES.find(c => c.code === currency)?.code || 'USD';
+  
+  const selectedCurrency = CURRENCIES.find(c => c.code === currency);
+  const currentCurrencyLabel = selectedCurrency ? t(selectedCurrency.labelKey, {defaultValue: currency}) : 'USD';
   
   // Custom helper to display the specific design names for theme like "Ligth" in mockup
   const getThemeDisplayValue = () => {
@@ -352,16 +356,16 @@ const ProfileMenuScreen: React.FC = () => {
   ) => (
     <TouchableOpacity style={styles.modalOptionRow} onPress={onPress} activeOpacity={0.7}>
       {icon && !iconText && (
-        <Icon name={icon} style={{fontSize: 22, color: isSelected ? colors.primary : colors.textSecondary, marginRight: isRTL ? 0 : spacing.md, marginLeft: isRTL ? spacing.md : 0, width: 28, textAlign: 'center'}} />
+        <Icon name={icon} style={{fontSize: 22, color: isSelected ? colors.primary : colors.textSecondary, marginRight: spacing.md, width: 28, textAlign: 'center'}} />
       )}
       {iconText && (
-        <View style={{marginRight: isRTL ? 0 : spacing.md, marginLeft: isRTL ? spacing.md : 0, width: 28, alignItems: 'center'}}>
+        <View style={{marginRight: spacing.md, width: 28, alignItems: 'center'}}>
           <Text style={{fontSize: 22, color: colors.textPrimary}}>{iconText}</Text>
         </View>
       )}
       <View style={{flex: 1}}>
         <Text style={[styles.modalOptionLabel, isSelected && {color: colors.primary, fontWeight: '700'}]}>{label}</Text>
-        {subtext && <Text style={{...typography.caption, color: colors.textSecondary, marginTop: 2, textAlign: isRTL ? 'right' : 'left'}}>{subtext}</Text>}
+        {subtext && <Text style={{...typography.caption, color: colors.textSecondary, marginTop: 2, textAlign: 'left'}}>{subtext}</Text>}
       </View>
       <View style={[styles.radioCircle, isSelected && styles.radioCircleSelected]}>
         {isSelected && <View style={styles.radioInner} />}
@@ -393,10 +397,12 @@ const ProfileMenuScreen: React.FC = () => {
             
             <View style={styles.profileInfo}>
               <Text style={styles.name} numberOfLines={1}>{profile?.displayName || user.name}</Text>
-              <Text style={styles.email} numberOfLines={1}>{profile?.email || user.email}</Text>
-              <View style={styles.roleBadge}>
-                <Text style={styles.roleText}>{profile?.role === 'SUPER_ADMIN' ? 'Admin' : (profile?.role || 'User')}</Text>
-              </View>
+              <Text style={styles.email} numberOfLines={1}>{profile?.email || user?.email}</Text>
+              {profile?.role && (
+                <View style={styles.roleBadge}>
+                  <Text style={styles.roleText} numberOfLines={1}>{t(`roles.${profile.role}`, {defaultValue: profile.role})}</Text>
+                </View>
+              )}
             </View>
 
             <TouchableOpacity 
@@ -456,7 +462,7 @@ const ProfileMenuScreen: React.FC = () => {
               <Icon name="cash-outline" style={{fontSize: 20, color: '#3E2723'}} />
             </View>
             <Text style={styles.optionLabel}>{t('settings.currency', {defaultValue: 'Currency'})}</Text>
-            <Text style={styles.optionValue}>{currentCurrencyLabel === 'USD' ? 'Dolar $' : currentCurrencyLabel}</Text>
+            <Text style={styles.optionValue}>{currentCurrencyLabel}</Text>
             <Icon name={flipIcon('chevron-forward')} style={styles.chevron} />
           </TouchableOpacity>
         </View>
@@ -536,7 +542,7 @@ const ProfileMenuScreen: React.FC = () => {
                         <Text style={styles.modalTitle}>{t('settings.currency', {defaultValue: 'Currency'})}</Text>
                       </View>
                       <View style={styles.optionsContainer}>
-                        {CURRENCIES.map(curr => renderModalOption(`${curr.code} - ${curr.label}`, currency === curr.code, () => {
+                        {CURRENCIES.map(curr => renderModalOption(`${curr.code} - ${t(curr.labelKey, {defaultValue: curr.code})}`, currency === curr.code, () => {
                           setCurrency(curr.code);
                           setActiveModal(null);
                           if (user) {
