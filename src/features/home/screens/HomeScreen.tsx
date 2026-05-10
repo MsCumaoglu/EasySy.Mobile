@@ -184,9 +184,7 @@ const HomeScreen: React.FC = () => {
                     ? t('home.adminSuperDesc', {defaultValue: 'Herşeyi yönet'})
                     : t('home.adminOwnerDesc', {defaultValue: 'Organizasyonunu yönet'})
                 }
-                onPress={() => {
-                  // TODO: Navigate to Admin screen
-                }}
+                onPress={() => navigation.navigate('Management')}
               />
             </View>
           ) : null}

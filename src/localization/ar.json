@@ -264,5 +264,33 @@
     "eur": "يورو",
     "try": "ليرة تركية",
     "syp": "ليرة سورية"
+  },
+  "management": {
+    "superAdminTitle": "لوحة المشرف العام",
+    "hotelOwnerTitle": "إدارة فندقي",
+    "busOwnerTitle": "إدارة حافلاتي",
+    "dashboard": "لوحة التحكم",
+    "dashboardDesc": "لوحة التحكم",
+    "hotelDashDesc": "لوحة تحكم الفندق",
+    "busDashDesc": "لوحة تحكم الحافلات",
+    "hotels": "الفنادق",
+    "hotelsDesc": "إدارة معلومات الفنادق",
+    "hotelInfo": "معلومات الفندق",
+    "hotelInfoDesc": "إدارة معلومات فندقك",
+    "buses": "الحافلات",
+    "busesDesc": "إدارة معلومات الحافلات",
+    "busManagement": "إدارة الحافلات",
+    "busManagementDesc": "إدارة معلومات حافلاتك",
+    "users": "المستخدمون",
+    "usersDesc": "إدارة المستخدمين",
+    "reviews": "التقييمات",
+    "reviewsDesc": "تقييمات فندقك",
+    "busReviewsDesc": "تقييمات حافلاتك",
+    "bookings": "الحجوزات",
+    "bookingsDesc": "حجوزات فندقك",
+    "employers": "الموظفون",
+    "employersDesc": "موظفو فندقك",
+    "settings": "الإعدادات",
+    "settingsDesc": "جميع الإعدادات"
   }
 }

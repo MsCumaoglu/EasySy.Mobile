@@ -265,5 +265,33 @@
     "eur": "Euro",
     "try": "Türk Lirası",
     "syp": "Suriye Lirası"
+  },
+  "management": {
+    "superAdminTitle": "Süper Admin Yönetimi",
+    "hotelOwnerTitle": "Otelim Yönetimi",
+    "busOwnerTitle": "Otobüslerim Yönetimi",
+    "dashboard": "Dashboard",
+    "dashboardDesc": "Dashboard",
+    "hotelDashDesc": "Otel Dashboard'unuz",
+    "busDashDesc": "Otobüs Dashboard'unuz",
+    "hotels": "Oteller",
+    "hotelsDesc": "Otel bilgilerini yönet",
+    "hotelInfo": "Otel Bilgileri",
+    "hotelInfoDesc": "Otelinizin bilgilerini yönetin",
+    "buses": "Otobüsler",
+    "busesDesc": "Otobüs bilgilerini yönet",
+    "busManagement": "Otobüs Yönetimi",
+    "busManagementDesc": "Otobüslerinizi yönetin",
+    "users": "Kullanıcılar",
+    "usersDesc": "Kullanıcıları yönet",
+    "reviews": "Değerlendirmeler",
+    "reviewsDesc": "Otel değerlendirmeleri",
+    "busReviewsDesc": "Otobüs değerlendirmeleri",
+    "bookings": "Rezervasyonlar",
+    "bookingsDesc": "Otel rezervasyonları",
+    "employers": "Çalışanlar",
+    "employersDesc": "Otel çalışanları",
+    "settings": "Ayarlar",
+    "settingsDesc": "Tüm ayarlar"
   }
 }

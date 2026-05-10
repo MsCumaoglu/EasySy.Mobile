@@ -266,5 +266,33 @@
     "eur": "Euro",
     "try": "Turkish Lira",
     "syp": "Syrian Pound"
+  },
+  "management": {
+    "superAdminTitle": "Super Admin Management",
+    "hotelOwnerTitle": "My Hotel Management",
+    "busOwnerTitle": "My Buses Management",
+    "dashboard": "Dashboard",
+    "dashboardDesc": "Dashboard",
+    "hotelDashDesc": "Your hotel Dashboard",
+    "busDashDesc": "Your bus Dashboard",
+    "hotels": "Hotels",
+    "hotelsDesc": "Manage hotels info",
+    "hotelInfo": "Hotel Info",
+    "hotelInfoDesc": "Manage your hotel info",
+    "buses": "Buses",
+    "busesDesc": "Manage buses info",
+    "busManagement": "Bus Management",
+    "busManagementDesc": "Manage your buses info",
+    "users": "Users",
+    "usersDesc": "Manage users",
+    "reviews": "Reviews",
+    "reviewsDesc": "Your hotel Reviews",
+    "busReviewsDesc": "Your bus Reviews",
+    "bookings": "Bookings",
+    "bookingsDesc": "Your hotel bookings",
+    "employers": "Employers",
+    "employersDesc": "Your hotel Employers",
+    "settings": "Settings",
+    "settingsDesc": "All settings"
   }
 }
