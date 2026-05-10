@@ -43,12 +43,13 @@ const HomeButtonCard: React.FC<HomeButtonCardProps> = ({
       borderWidth: 1,
       borderColor: colors.border,
       overflow: 'hidden',
+      flex: 1,
       ...(isVertical ? {
-        height: 240, // Enough height for text and bottom image
+        minHeight: 180,
         flexDirection: 'column',
       } : {
         flexDirection: 'row',
-        height: 140, // Height for horizontal layout
+        minHeight: 110,
       }),
     },
     textContainer: {

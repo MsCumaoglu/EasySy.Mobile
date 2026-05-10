@@ -85,11 +85,13 @@ const HomeScreen: React.FC = () => {
       marginRight: isRTL ? 4 : 0,
     },
     categoriesSection: {
+      flex: 1,
       paddingHorizontal: spacing.xl,
       paddingTop: spacing.sm,
-      paddingBottom: spacing.xxl,
+      paddingBottom: spacing.lg,
     },
     gridContainer: {
+      flex: 1.4,
       flexDirection: 'row',
       justifyContent: 'space-between',
       marginBottom: spacing.lg,
@@ -106,7 +108,7 @@ const HomeScreen: React.FC = () => {
         barStyle={isDark ? 'light-content' : 'dark-content'}
         backgroundColor={colors.background}
       />
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
         {/* Header Top Row */}
         <View style={styles.headerTopRow}>
           <TouchableOpacity style={[styles.iconButton, {alignItems: 'flex-start'}]} onPress={() => {
@@ -172,7 +174,7 @@ const HomeScreen: React.FC = () => {
           />
 
           {!!user && !!profile?.role && profile.role !== 'CONSUMER' ? (
-            <View style={{ marginTop: spacing.lg }}>
+            <View style={{ marginTop: spacing.lg, flex: 1 }}>
               <HomeButtonCard
                 variant="horizontal"
                 image={adminImage}
